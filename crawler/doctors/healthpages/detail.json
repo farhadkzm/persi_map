@@ -1,0 +1,20 @@
+{
+  ''
+  'type': 'doctor',
+  'src': '',
+  'name': '',
+  'detail': {
+
+    'occupation': '',
+    'gender': '',
+  },
+  'location': {
+    'phone': '',
+    'address': '',
+    'geo_set': {
+      "lat": 0,
+      "lon": 0
+    },
+    'clinic_name': ''
+  }
+}

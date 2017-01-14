@@ -1,0 +1,26 @@
+version: '2'
+services:
+  search:
+    image: "sebp/elk:511"
+    ports:
+      - "5602:5601"
+
+  crawler:
+#    build: ./crawler
+    image: "scrapy"
+    working_dir: /code/doctors/healthpages/healthpages
+    command: pip install -r /code/requirements.txt && /bin/scrapy crawl healthpages.wiki_detail
+    links:
+      - search
+    volumes:
+      - ./crawler:/code
+
+  web:
+    build: ./web
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./web:/code
+    ports:
+      - "8001:8000"
+    links:
+      - search

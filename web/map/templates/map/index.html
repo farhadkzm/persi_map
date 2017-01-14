@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+    <title>Search the map</title>
+    <style>
+        #map {
+            height: 400px;
+            width: 100%;
+        }
+
+        .controls {
+            margin-top: 10px;
+            border: 1px solid transparent;
+            border-radius: 2px 0 0 2px;
+            box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            height: 32px;
+            outline: none;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        #pac-input {
+            background-color: #fff;
+            font-family: Roboto;
+            font-size: 15px;
+            font-weight: 300;
+            margin-left: 12px;
+            padding: 0 11px 0 13px;
+            text-overflow: ellipsis;
+            width: 300px;
+        }
+
+        #pac-input:focus {
+            border-color: #4d90fe;
+        }
+
+        .pac-container {
+            font-family: Roboto;
+        }
+
+        #type-selector {
+            color: #fff;
+            background-color: #4d90fe;
+            padding: 5px 11px 0px 11px;
+        }
+
+        #type-selector label {
+            font-family: Roboto;
+            font-size: 13px;
+            font-weight: 300;
+        }
+    </style>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+
+</head>
+<body>
+<h3>My Google Maps Demo</h3>
+<input id="pac-input" class="controls" type="text"
+       placeholder="Enter a location"/>
+<input id="distance-input" class="controls" type="text"
+       placeholder="Distance" value="200km"/>
+
+
+<div id="map"></div>
+<script>
+    var map;
+    var allMarkers = [];
+
+    function initMap() {
+
+
+        map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 2,
+            center: new google.maps.LatLng(2.8, -187.3),
+            mapTypeId: 'terrain'
+        });
+        map.setZoom(17);
+        var input = document.getElementById('pac-input');
+
+        var autocomplete = new google.maps.places.Autocomplete(input);
+        autocomplete.setTypes(['address']);
+        autocomplete.bindTo('bounds', map);
+
+        autocomplete.addListener('place_changed', function () {
+            //infowindow.close();
+            // marker.setVisible(false);
+            var place = autocomplete.getPlace();
+            if (!place.geometry) {
+                // User entered the name of a Place that was not suggested and
+                // pressed the Enter key, or the Place Details request failed.
+                window.alert("No details available for input: '" + place.name + "'");
+                return;
+            }
+            var loc = 'lat=' + place.geometry.location.lat() + '&lng=' + place.geometry.location.lng();
+            var dist = 'distance=' + $('#distance-input').val();
+            $.getJSON("/map/search?" + loc + '&' + dist, function (data) {
+
+                console.log(data)
+
+                allMarkers.forEach(mkr=> {
+                    mkr.setMap(null);
+                });
+                allMarkers = []
+                if (data.hits.hits !== [])
+                    data.hits.hits.forEach(source => {
+                        var node = source._source.address
+
+                        var latLng = new google.maps.LatLng(node.location.lat, node.location.lon);
+                        var marker = new google.maps.Marker({
+                            position: latLng,
+                            map: map
+                        });
+                        marker.setIcon(/** @type {google.maps.Icon} */{
+
+                            size: new google.maps.Size(71, 71),
+                            origin: new google.maps.Point(0, 0),
+                            anchor: new google.maps.Point(17, 34),
+                            scaledSize: new google.maps.Size(35, 35)
+                        });
+                        allMarkers.push(marker)
+                    })
+
+
+            });
+
+
+        });
+
+
+    }
+</script>
+<script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDU0yX6BlIhIF8JLESH9qWu0_GZtAtBtwo&callback=initMap&libraries=places">
+</script>
+</body>
+</html>
