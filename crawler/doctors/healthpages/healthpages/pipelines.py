@@ -18,11 +18,12 @@ class IndexPipeline(object):
     def process_item(self, item, spider):
         if spider.name == "healthpages.wiki_detail":
             self.index_item(item)
-            return item
+
         return item
 
     def index_item(self, item):
-        item_identity = item['type'] % item['src']
+        item_identity = item["src"] + "{}-{}".format(item["location"]["geo_set"]["lat"],
+                                                     item["location"]["geo_set"]["lon"])
         id_hash = hashlib.md5(item_identity).hexdigest()
         requests.post(self.index_link.format(id_hash), json=item)
 
@@ -52,4 +53,3 @@ class IndexPipeline(object):
 
         }
         requests.put(self.mapping_link, json=mapping)
-

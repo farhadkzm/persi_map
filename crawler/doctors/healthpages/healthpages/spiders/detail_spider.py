@@ -4,13 +4,13 @@ import json
 
 class DetailSpider(scrapy.Spider):
     name = "healthpages.wiki_detail"
-    data_path = '/data/project/healthpages'
+    data_path = '/code/doctors/healthpages/healthpages'
 
-    file_lines = tuple(open('/data/names.csv', 'r'))
-    lines = set(reduce(list.__add__, map(lambda x: x.strip().replace('-', '').lower().split("/"), file_lines)))
+    # file_lines = tuple(open('/data/names.csv', 'r'))
+    # lines = set(reduce(list.__add__, map(lambda x: x.strip().replace('-', '').lower().split("/"), file_lines)))
 
     def start_requests(self):
-        links = json.load(open(self.data_path + '/names.json', 'r'))
+        links = json.load(open("{}/doctors_link.json".format(self.data_path), 'r'))
         for link in links:
             yield scrapy.Request(url=link["link"], callback=self.parse)
 

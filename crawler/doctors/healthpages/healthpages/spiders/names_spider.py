@@ -6,7 +6,7 @@ class NamesSpider(scrapy.Spider):
     start_urls = [
         'https://healthpages.wiki/wiki/Special:BrowseData/Healthcare_Professional?_single&Occupation=General_Practitioner_%28GP%29&State=VIC',
     ]
-    pages = 10
+    pages = 2
 
     def parse(self, response):
         self.pages -= 1
