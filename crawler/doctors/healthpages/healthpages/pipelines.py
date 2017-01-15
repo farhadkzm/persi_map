@@ -6,14 +6,21 @@
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 import hashlib
 import requests
-
+from requests.packages.urllib3.util.retry import Retry
 
 class IndexPipeline(object):
     index_link = "http://search:9200/object/item/{}"
     mapping_link = "http://search:9200/object"
+    session = requests.Session()
+    retries = Retry(total=50,
+                    backoff_factor=0.1,
+                    status_forcelist=[ 500, 501, 502, 503, 504 ])
 
     def open_spider(self, spider):
         self.check_mapping()
+
+        a = requests.adapters.HTTPAdapter(max_retries=self.retries)
+        self.session.mount('http://', a)
 
     def process_item(self, item, spider):
         if spider.name == "healthpages.wiki_detail":
@@ -25,10 +32,10 @@ class IndexPipeline(object):
         item_identity = item["src"] + "{}-{}".format(item["location"]["geo_set"]["lat"],
                                                      item["location"]["geo_set"]["lon"])
         id_hash = hashlib.md5(item_identity).hexdigest()
-        requests.post(self.index_link.format(id_hash), json=item)
+        self.session.post(self.index_link.format(id_hash), json=item)
 
     def check_mapping(self):
-        requests.delete(self.mapping_link)
+        self.session.delete(self.mapping_link)
 
         mapping = {
             "settings": {
@@ -52,4 +59,4 @@ class IndexPipeline(object):
             }
 
         }
-        requests.put(self.mapping_link, json=mapping)
+        self.session.put(self.mapping_link, json=mapping)
