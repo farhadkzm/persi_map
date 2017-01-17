@@ -1,4 +1,4 @@
-version: '2'
+version: '2.1'
 services:
   search:
     image: "sebp/elk:511"
@@ -7,7 +7,7 @@ services:
 
   crawler:
 #    build: ./crawler
-    image: "scrapy"
+    image: "farhadkzm/persi_map:latest"
     working_dir: /code/doctors/healthpages/healthpages
     command: bash -c "pip install -r /code/requirements.txt && /usr/local/bin/scrapy crawl healthpages.wiki_names -o doctors_link.json && /usr/local/bin/scrapy crawl healthpages.wiki_detail -o doctors_details.json"
     links:

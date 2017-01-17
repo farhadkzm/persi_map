@@ -5,22 +5,14 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 import hashlib
-import requests
-from requests.packages.urllib3.util.retry import Retry
+from elasticsearch import Elasticsearch
+
 
 class IndexPipeline(object):
-    index_link = "http://search:9200/object/item/{}"
-    mapping_link = "http://search:9200/object"
-    session = requests.Session()
-    retries = Retry(total=50,
-                    backoff_factor=0.1,
-                    status_forcelist=[ 500, 501, 502, 503, 504 ])
+    es = Elasticsearch(['search:9200'], max_retries=50)
 
     def open_spider(self, spider):
         self.check_mapping()
-
-        a = requests.adapters.HTTPAdapter(max_retries=self.retries)
-        self.session.mount('http://', a)
 
     def process_item(self, item, spider):
         if spider.name == "healthpages.wiki_detail":
@@ -31,11 +23,11 @@ class IndexPipeline(object):
     def index_item(self, item):
         item_identity = item["src"] + "{}-{}".format(item["location"]["geo_set"]["lat"],
                                                      item["location"]["geo_set"]["lon"])
-        id_hash = hashlib.md5(item_identity).hexdigest()
-        self.session.post(self.index_link.format(id_hash), json=item)
+        item_id = hashlib.md5(item_identity).hexdigest()
+        self.es.index(index='object', doc_type='item', id=item_id, body=item)
 
     def check_mapping(self):
-        self.session.delete(self.mapping_link)
+        self.es.indices.delete(index='object')
 
         mapping = {
             "settings": {
@@ -59,4 +51,4 @@ class IndexPipeline(object):
             }
 
         }
-        self.session.put(self.mapping_link, json=mapping)
+        self.es.indices.index(index='object', body=mapping)
