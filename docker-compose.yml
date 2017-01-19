@@ -15,12 +15,12 @@ services:
     volumes:
       - ./crawler:/code
 
-  web:
-    build: ./web
-    command: python manage.py runserver 0.0.0.0:8000
-    volumes:
-      - ./web:/code
-    ports:
-      - "8001:8000"
-    links:
-      - search
+#  web:
+#    build: ./web
+#    command: python manage.py runserver 0.0.0.0:8000
+#    volumes:
+#      - ./web:/code
+#    ports:
+#      - "8001:8000"
+#    links:
+#      - search

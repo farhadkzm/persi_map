@@ -6,13 +6,15 @@
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 import hashlib
 from elasticsearch import Elasticsearch
-
+from elasticsearch import TransportError
+from elasticsearch import ConnectionError
+from time import sleep
 
 class IndexPipeline(object):
-    es = Elasticsearch(['search:9200'], max_retries=50)
+    es = Elasticsearch(['search:9200'],retries=True, max_retries=10, retry_on_timeout=True, dead_timeout=2)
 
     def open_spider(self, spider):
-        self.check_mapping()
+        self.check_mapping(5000)
 
     def process_item(self, item, spider):
         if spider.name == "healthpages.wiki_detail":
@@ -26,8 +28,20 @@ class IndexPipeline(object):
         item_id = hashlib.md5(item_identity).hexdigest()
         self.es.index(index='object', doc_type='item', id=item_id, body=item)
 
-    def check_mapping(self):
-        self.es.indices.delete(index='object')
+    def check_mapping(self, retry):
+        try:
+            self.es.indices.delete(index='object')
+        except ConnectionError:
+            if retry > 1:
+                print 'Sleeping for 5 seconds.'
+                sleep(5)
+                self.check_mapping(retry -1)
+            return
+        except TransportError as err:
+            if err.status_code == 404:
+                print 'Index has not been created yet. Now trying to create a new one...'
+            else:
+                raise
 
         mapping = {
             "settings": {
@@ -51,4 +65,4 @@ class IndexPipeline(object):
             }
 
         }
-        self.es.indices.index(index='object', body=mapping)
+        self.es.indices.create(index='object', body=mapping)
