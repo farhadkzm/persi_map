@@ -1,19 +1,19 @@
-from django.http import HttpResponse
-from django.shortcuts import render
-from django.template import loader
-import urllib
-import json
-from django.http import JsonResponse
 import requests
+from django.http import HttpResponse
+from django.http import JsonResponse
+from django.template import loader
+from elasticsearch import Elasticsearch
 
+es = Elasticsearch(['search:9200'], max_retries=10)
 def search(request):
-    # todo convert address to geo point
-    # todo search ES with e geo point
-    # todo return the result
-    lat = float(request.GET.get('lat', 0))
-    lng = float(request.GET.get('lng', 0))
+
+
+    geo_piont = {
+        "lat": float(request.GET.get('lat', 0)),
+        "lon": float(request.GET.get('lng', 0))
+    }
     distance = request.GET.get('distance', '')
-    payload = {
+    search_body = {
         "query": {
             "bool": {
                 "must": {
@@ -22,21 +22,16 @@ def search(request):
                 "filter": {
                     "geo_distance": {
                         "distance": distance,
-                        "address.location": {
-                            "lat": lat,
-                            "lon": lng
-                        }
+                        "location.geo_set": geo_piont
                     }
                 }
             }
         }
     }
 
-    link = "http://search:9200/objects/items/_search"
+    result = es.search(index='object', doc_type='item', body=search_body, filter_path=['hits.hits._*'])
+    return JsonResponse(result)
 
-    myfile = requests.post(link, json=payload)
-    print(myfile.text)
-    return JsonResponse(myfile.json())
 
 def index(request):
     template = loader.get_template('map/index.html')

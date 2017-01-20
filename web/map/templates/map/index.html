@@ -106,9 +106,9 @@
                 allMarkers = []
                 if (data.hits.hits !== [])
                     data.hits.hits.forEach(source => {
-                        var node = source._source.address
+                        var node = source._source.location
 
-                        var latLng = new google.maps.LatLng(node.location.lat, node.location.lon);
+                        var latLng = new google.maps.LatLng(node.geo_set.lat, node.geo_set.lon);
                         var marker = new google.maps.Marker({
                             position: latLng,
                             map: map

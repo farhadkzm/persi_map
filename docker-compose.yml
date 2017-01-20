@@ -6,7 +6,6 @@ services:
       - "5602:5601"
 
   crawler:
-#    build: ./crawler
     image: "farhadkzm/persi_map:latest"
     working_dir: /code/doctors/healthpages/healthpages
     command: bash -c "pip install -r /code/requirements.txt && /usr/local/bin/scrapy crawl healthpages.wiki_names -o doctors_link.json && /usr/local/bin/scrapy crawl healthpages.wiki_detail -o doctors_details.json"
@@ -15,12 +14,12 @@ services:
     volumes:
       - ./crawler:/code
 
-#  web:
-#    build: ./web
-#    command: python manage.py runserver 0.0.0.0:8000
-#    volumes:
-#      - ./web:/code
-#    ports:
-#      - "8001:8000"
-#    links:
-#      - search
+  web:
+    build: ./web
+    command: bash -c "pip install -r /code/requirements.txt && python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./web:/code
+    ports:
+      - "8001:8000"
+    links:
+      - search
