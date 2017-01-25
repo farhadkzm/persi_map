@@ -57,18 +57,58 @@
 
 </head>
 <body>
-<h3>My Google Maps Demo</h3>
+
 <input id="pac-input" class="controls" type="text"
        placeholder="Enter a location"/>
 <input id="distance-input" class="controls" type="text"
        placeholder="Distance" value="200km"/>
 
+<input id="category-input" class="controls" type="text"
+       placeholder="Category" value="doctor"/>
+<input id="text-input" class="controls" type="text"
+       placeholder="Name, Occupation, etc." value=""/>
+
+<input type="button" value="Search" onclick="search()"/>
 
 <div id="map"></div>
 <script>
     var map;
     var allMarkers = [];
+    var search_location = "";
+    function search() {
+        var free_text = 'free_text=' + $('#text-input').val();
+        var category = 'category=' + $('#category-input').val();
+        var dist = 'distance=' + $('#distance-input').val();
+        $.getJSON("/map/search?" + search_location + '&' + dist + '&' + category + '&' + free_text, function (data) {
 
+            console.log(data)
+
+            allMarkers.forEach(mkr => {
+                mkr.setMap(null);
+            });
+            allMarkers = []
+            if (data.hits.hits !== [])
+                data.hits.hits.forEach(source => {
+                    var node = source._source.location
+
+                    var latLng = new google.maps.LatLng(node.geo_set.lat, node.geo_set.lon);
+                    var marker = new google.maps.Marker({
+                        position: latLng,
+                        map: map
+                    });
+                    marker.setIcon(/** @type {google.maps.Icon} */{
+
+                        size: new google.maps.Size(71, 71),
+                        origin: new google.maps.Point(0, 0),
+                        anchor: new google.maps.Point(17, 34),
+                        scaledSize: new google.maps.Size(35, 35)
+                    });
+                    allMarkers.push(marker)
+                })
+
+
+        });
+    }
     function initMap() {
 
 
@@ -94,37 +134,7 @@
                 window.alert("No details available for input: '" + place.name + "'");
                 return;
             }
-            var loc = 'lat=' + place.geometry.location.lat() + '&lng=' + place.geometry.location.lng();
-            var dist = 'distance=' + $('#distance-input').val();
-            $.getJSON("/map/search?" + loc + '&' + dist, function (data) {
-
-                console.log(data)
-
-                allMarkers.forEach(mkr=> {
-                    mkr.setMap(null);
-                });
-                allMarkers = []
-                if (data.hits.hits !== [])
-                    data.hits.hits.forEach(source => {
-                        var node = source._source.location
-
-                        var latLng = new google.maps.LatLng(node.geo_set.lat, node.geo_set.lon);
-                        var marker = new google.maps.Marker({
-                            position: latLng,
-                            map: map
-                        });
-                        marker.setIcon(/** @type {google.maps.Icon} */{
-
-                            size: new google.maps.Size(71, 71),
-                            origin: new google.maps.Point(0, 0),
-                            anchor: new google.maps.Point(17, 34),
-                            scaledSize: new google.maps.Size(35, 35)
-                        });
-                        allMarkers.push(marker)
-                    })
-
-
-            });
+            search_location = 'lat=' + place.geometry.location.lat() + '&lng=' + place.geometry.location.lng();
 
 
         });

@@ -4,6 +4,8 @@ services:
     image: "sebp/elk:511"
     ports:
       - "5602:5601"
+    volumes:
+      - /tmp/elk:/var/lib/elasticsearch
 
   crawler:
     image: "farhadkzm/persi_map:latest"
