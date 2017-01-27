@@ -1,9 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en" ng-app>
+<head >
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
     <title>Search the map</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
     <style>
         #map {
             height: 400px;
@@ -55,6 +60,7 @@
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 
+
 </head>
 <body>
 
@@ -65,59 +71,97 @@
 
 <input id="category-input" class="controls" type="text"
        placeholder="Category" value="doctor"/>
-<input id="text-input" class="controls" type="text"
-       placeholder="Name, Occupation, etc." value=""/>
+<input id="name-input" class="controls" type="text"
+       placeholder="Doctor's name" value=""/>
+<input id="occupation-input" class="controls" type="text"
+       placeholder="Occupation" value=""/>
+<input id="clinic-input" class="controls" type="text"
+       placeholder="Clinic" value=""/>
+<input id="gender-input" class="controls" type="text"
+       placeholder="Gender" value="female"/>
 
-<input type="button" value="Search" onclick="search()"/>
+<input type="button" value="Search" onclick="search(true)"/>
 
 <div id="map"></div>
+
+<div ng-repeat="marker in allMarkers">
+    {{n}}
+</div>
 <script>
     var map;
     var allMarkers = [];
-    var search_location = "";
-    function search() {
-        var free_text = 'free_text=' + $('#text-input').val();
+    var searchedPoint = null;
+
+    function search(set_bounds) {
+        var clinic = 'clinic=' + $('#clinic-input').val();
+        var name = 'name=' + $('#name-input').val();
+        var occupation = 'occupation=' + $('#occupation-input').val();
         var category = 'category=' + $('#category-input').val();
         var dist = 'distance=' + $('#distance-input').val();
-        $.getJSON("/map/search?" + search_location + '&' + dist + '&' + category + '&' + free_text, function (data) {
+        var gender = 'gender=' + $('#gender-input').val();
+        var search_location = 'lat=' + searchedPoint.lat() + '&lng=' + searchedPoint.lng();
+        $.getJSON("/map/search?" + gender + '&' + search_location + '&' + dist + '&' + category + '&' + occupation + '&' + name + '&' + clinic, function (data) {
 
-            console.log(data)
+                console.log(data)
 
-            allMarkers.forEach(mkr => {
-                mkr.setMap(null);
-            });
-            allMarkers = []
-            if (data.hits.hits !== [])
-                data.hits.hits.forEach(source => {
-                    var node = source._source.location
+                allMarkers.forEach(mkr => {
+                    mkr.setMap(null);
+                });
+                allMarkers = []
+                if (data.hits.hits !== []) {
+                    data.hits.hits.forEach(source => {
+                        var node = source._source.location
 
-                    var latLng = new google.maps.LatLng(node.geo_set.lat, node.geo_set.lon);
-                    var marker = new google.maps.Marker({
-                        position: latLng,
-                        map: map
+                        var latLng = new google.maps.LatLng(node.geo_set.lat, node.geo_set.lon);
+                        var marker = new google.maps.Marker({
+                            position: latLng,
+                            map: map
+                        });
+
+
+                        marker.setIcon(/** @type {google.maps.Icon} */{
+
+                            size: new google.maps.Size(71, 71),
+                            origin: new google.maps.Point(0, 0),
+                            anchor: new google.maps.Point(17, 34),
+                            scaledSize: new google.maps.Size(35, 35)
+                        });
+                        allMarkers.push(marker)
                     });
-                    marker.setIcon(/** @type {google.maps.Icon} */{
 
-                        size: new google.maps.Size(71, 71),
-                        origin: new google.maps.Point(0, 0),
-                        anchor: new google.maps.Point(17, 34),
-                        scaledSize: new google.maps.Size(35, 35)
-                    });
-                    allMarkers.push(marker)
-                })
+                    if (set_bounds) {
+
+                        var bounds = new google.maps.LatLngBounds();
+                        for (var i = 0; i < allMarkers.length; i++) {
+                            bounds.extend(allMarkers[i].getPosition());
+                        }
+
+                        if (searchedPoint != null)
+                            bounds.extend(searchedPoint);
+                        map.fitBounds(bounds);
+                    }
+                }
 
 
-        });
+            }
+        )
+        ;
     }
     function initMap() {
 
 
         map = new google.maps.Map(document.getElementById('map'), {
-            zoom: 2,
-            center: new google.maps.LatLng(2.8, -187.3),
+            zoom: 5,
+            center: new google.maps.LatLng(-37.813852, 144.960995),
             mapTypeId: 'terrain'
         });
-        map.setZoom(17);
+        google.maps.event.addListener(map, 'dragend', function () {
+            // get the center and run the search again
+            console.log("searching again....");
+            searchedPoint = map.getCenter();
+            search(false)
+
+        });
         var input = document.getElementById('pac-input');
 
         var autocomplete = new google.maps.places.Autocomplete(input);
@@ -125,6 +169,7 @@
         autocomplete.bindTo('bounds', map);
 
         autocomplete.addListener('place_changed', function () {
+            searchedPoint = null;
             //infowindow.close();
             // marker.setVisible(false);
             var place = autocomplete.getPlace();
@@ -134,8 +179,9 @@
                 window.alert("No details available for input: '" + place.name + "'");
                 return;
             }
-            search_location = 'lat=' + place.geometry.location.lat() + '&lng=' + place.geometry.location.lng();
 
+            searchedPoint = new google.maps.LatLng(place.geometry.location.lat(), place.geometry.location.lng());
+            map.setCenter(searchedPoint);
 
         });
 

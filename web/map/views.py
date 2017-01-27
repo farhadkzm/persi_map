@@ -9,7 +9,6 @@ es = Elasticsearch(['search:9200'], max_retries=10)
 # search queries to be implemented:
 #
 def search(request):
-
     geo_piont = {
         "lat": float(request.GET.get('lat', 0)),
         "lon": float(request.GET.get('lng', 0))
@@ -19,15 +18,22 @@ def search(request):
     name = request.GET.get('name', '')
     occupation = request.GET.get('occupation', '')
     clinic = request.GET.get('clinic', '')
+    gender = request.GET.get('gender', '')
     matching_blocks = []
     if name != '':
         matching_blocks.append({"match": {"name": name}})
 
     if occupation != '':
-        matching_blocks.append( {"match": {"detail.occupation": occupation}})
+        matching_blocks.append({"match": {"detail.occupation": occupation}})
 
     if clinic != '':
         matching_blocks.append({"match": {"location.clinic_name": clinic}})
+
+    should_blocks = []
+    minimum_should_match = 0
+    if gender != '':
+        should_blocks = [{"term": {"detail.gender": ""}}, {"term": {"detail.gender": gender}}]
+        minimum_should_match = 1
 
     print 'printing matching blocks'
     print matching_blocks
@@ -35,6 +41,8 @@ def search(request):
         "query": {
             "bool": {
                 "must": matching_blocks,
+                "should": should_blocks,
+                "minimum_should_match": minimum_should_match,
                 "filter": [
                     {
                         "geo_distance": {
