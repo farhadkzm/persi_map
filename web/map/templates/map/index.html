@@ -1,14 +1,12 @@
 <!DOCTYPE html>
-<html lang="en" ng-app="mapApplication">
-<head>
+<html lang="en" ng-app>
+<head >
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
-          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 
     <!-- Optional theme -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
-          integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
     <title>Search the map</title>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
     <style>
@@ -62,157 +60,132 @@
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 
-    <script>
 
-
-        let mapApplication = angular.module('mapApplication', []);
-
-
-        mapApplication.controller('MapController', function MapController($scope, $http) {
-            $scope.markers = [];
-            $scope.searchPoint = {};
-            $scope.category = 'doctor';
-            $scope.distance = '100km';
-
-            function setMarkerOntheMap(geoSet) {
-
-                let latLng = new google.maps.LatLng(geoSet.lat, geoSet.lon);
-                let marker = new google.maps.Marker({
-                    position: latLng,
-                    map: $scope.map
-                });
-
-
-                $scope.markers.push(marker);
-            }
-
-            $scope.dragendMap = function () {
-                $scope.searchPoint = {lat: $scope.map.getCenter().lat(), lng: $scope.map.getCenter().lng()};
-
-                $scope.search(false);
-            };
-
-            $scope.changeAddress = function (place) {
-                //infowindow.close();
-                // marker.setVisible(false);
-                $scope.searchPoint = {};
-                if (!place.geometry) {
-                    // User entered the name of a Place that was not suggested and
-                    // pressed the Enter key, or the Place Details request failed.
-                    window.alert("No details available for input: '" + place.name + "'");
-                    return;
-                }
-                let location = place.geometry.location;
-                $scope.searchPoint = {lat: location.lat(), lng: location.lng()};
-                $scope.map.setCenter(new google.maps.LatLng(location.lat(), location.lng()));
-            };
-
-
-            $scope.search = function (manualSearch = true) {
-
-                $http.get('/map/search', {
-                    params: {
-                        clinic: $scope.clinic,
-                        name: $scope.name,
-                        occupation: $scope.occupation,
-                        category: $scope.category,
-                        distance: $scope.distance,
-                        gender: $scope.gender,
-                        lat: $scope.searchPoint.lat,
-                        lng: $scope.searchPoint.lng
-                    }
-                }).success(function (data, status, headers, config) {
-
-                    //remove all markers
-                    $scope.markers.forEach(mkr => mkr.setMap(null));
-                    $scope.markers = [];
-                    if (data.hits != undefined && data.hits.hits !== undefined) {
-                        let result = data.hits.hits;
-                        $scope.searchResult = [];
-                        result.map(el => el._source).forEach(source => {
-                            setMarkerOntheMap(source.location.geo_set);
-                            $scope.searchResult.push(source);
-                        });
-
-
-                        if (manualSearch) {
-                            let bounds = new google.maps.LatLngBounds();
-                            $scope.markers.map(marker => marker.getPosition()).forEach(pos => bounds.extend(pos));
-                            $scope.map.fitBounds(bounds);
-                        }
-                    }
-
-                }).error(function (data, status, headers, config) {
-                    console.log('failed!')
-                });
-            };
-        });
-
-
-    </script>
 </head>
-<body ng-controller="MapController">
+<body>
 
-<input id="pac-input" class="controls" type="text" placeholder="Enter a location"/>
+<input id="pac-input" class="controls" type="text"
+       placeholder="Enter a location"/>
+<input id="distance-input" class="controls" type="text"
+       placeholder="Distance" value="200km"/>
 
-<input id="distance-input" class="controls" type="text" placeholder="Distance" value="200km" ng-model="distance"/>
+<input id="category-input" class="controls" type="text"
+       placeholder="Category" value="doctor"/>
+<input id="name-input" class="controls" type="text"
+       placeholder="Doctor's name" value=""/>
+<input id="occupation-input" class="controls" type="text"
+       placeholder="Occupation" value=""/>
+<input id="clinic-input" class="controls" type="text"
+       placeholder="Clinic" value=""/>
+<input id="gender-input" class="controls" type="text"
+       placeholder="Gender" value="female"/>
 
-<input id="category-input" class="controls" type="text" placeholder="Category" value="doctor" ng-model="category"/>
-
-<input id="name-input" class="controls" type="text" placeholder="Doctor's name" ng-model="name"/>
-
-<input id="occupation-input" class="controls" type="text" placeholder="Occupation" ng-model="occupation"/>
-
-<input id="clinic-input" class="controls" type="text" placeholder="Clinic" ng-model="clinic"/>
-
-<input id="gender-input" class="controls" type="text" placeholder="Gender" value="" ng-model="gender"/>
-
-<input type="button" value="Search" ng-click="search()"/>
+<input type="button" value="Search" onclick="search(true)"/>
 
 <div id="map"></div>
 
-<div >
-    {% verbatim %}
-
-
-        <li ng-repeat="el in searchResult">
-        {{ el.name }} - {{ el.location.address }}
-        </li>
-    </ul>
-
-    {% endverbatim %}
-    <ul>
+<div ng-repeat="marker in allMarkers">
+    {{n}}
 </div>
 <script>
+    var map;
+    var allMarkers = [];
+    var searchedPoint = null;
 
+    function search(set_bounds) {
+        var clinic = 'clinic=' + $('#clinic-input').val();
+        var name = 'name=' + $('#name-input').val();
+        var occupation = 'occupation=' + $('#occupation-input').val();
+        var category = 'category=' + $('#category-input').val();
+        var dist = 'distance=' + $('#distance-input').val();
+        var gender = 'gender=' + $('#gender-input').val();
+        var search_location = 'lat=' + searchedPoint.lat() + '&lng=' + searchedPoint.lng();
+        $.getJSON("/map/search?" + gender + '&' + search_location + '&' + dist + '&' + category + '&' + occupation + '&' + name + '&' + clinic, function (data) {
+
+                console.log(data)
+
+                allMarkers.forEach(mkr => {
+                    mkr.setMap(null);
+                });
+                allMarkers = []
+                if (data.hits.hits !== []) {
+                    data.hits.hits.forEach(source => {
+                        var node = source._source.location
+
+                        var latLng = new google.maps.LatLng(node.geo_set.lat, node.geo_set.lon);
+                        var marker = new google.maps.Marker({
+                            position: latLng,
+                            map: map
+                        });
+
+
+                        marker.setIcon(/** @type {google.maps.Icon} */{
+
+                            size: new google.maps.Size(71, 71),
+                            origin: new google.maps.Point(0, 0),
+                            anchor: new google.maps.Point(17, 34),
+                            scaledSize: new google.maps.Size(35, 35)
+                        });
+                        allMarkers.push(marker)
+                    });
+
+                    if (set_bounds) {
+
+                        var bounds = new google.maps.LatLngBounds();
+                        for (var i = 0; i < allMarkers.length; i++) {
+                            bounds.extend(allMarkers[i].getPosition());
+                        }
+
+                        if (searchedPoint != null)
+                            bounds.extend(searchedPoint);
+                        map.fitBounds(bounds);
+                    }
+                }
+
+
+            }
+        )
+        ;
+    }
     function initMap() {
-        $scope = angular.element(document.querySelector('[ng-controller="MapController"]')).scope();
 
-        let map = new google.maps.Map(document.getElementById('map'), {
+
+        map = new google.maps.Map(document.getElementById('map'), {
             zoom: 5,
-            center: new google.maps.LatLng(-37.813852, 144.960995),//Melbourne position
+            center: new google.maps.LatLng(-37.813852, 144.960995),
             mapTypeId: 'terrain'
         });
         google.maps.event.addListener(map, 'dragend', function () {
             // get the center and run the search again
-            $scope.dragendMap();
+            console.log("searching again....");
+            searchedPoint = map.getCenter();
+            search(false)
 
         });
-        let input = document.getElementById('pac-input');
+        var input = document.getElementById('pac-input');
 
-        let autocomplete = new google.maps.places.Autocomplete(input);
+        var autocomplete = new google.maps.places.Autocomplete(input);
         autocomplete.setTypes(['address']);
         autocomplete.bindTo('bounds', map);
 
         autocomplete.addListener('place_changed', function () {
+            searchedPoint = null;
+            //infowindow.close();
+            // marker.setVisible(false);
+            var place = autocomplete.getPlace();
+            if (!place.geometry) {
+                // User entered the name of a Place that was not suggested and
+                // pressed the Enter key, or the Place Details request failed.
+                window.alert("No details available for input: '" + place.name + "'");
+                return;
+            }
 
-
-            let place = autocomplete.getPlace();
-            $scope.changeAddress(place);
+            searchedPoint = new google.maps.LatLng(place.geometry.location.lat(), place.geometry.location.lng());
+            map.setCenter(searchedPoint);
 
         });
 
-        $scope.map = map;
+
     }
 </script>
 <script async defer
