@@ -3,8 +3,9 @@ from django.http import JsonResponse
 from django.template import loader
 from elasticsearch import Elasticsearch
 
-es = Elasticsearch(['search:9200'], max_retries=10)
-
+es = Elasticsearch([{
+    'host': 'search-persi-es-4zjjaw2exoo73nq2xbq3mvulie.us-west-2.es.amazonaws.com', 'port': 443, 'use_ssl': True
+}])
 
 # search queries to be implemented:
 #

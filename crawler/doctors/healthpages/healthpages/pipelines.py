@@ -11,7 +11,9 @@ from elasticsearch import ConnectionError
 from time import sleep
 
 class IndexPipeline(object):
-    es = Elasticsearch(['search:9200'],retries=True, max_retries=10, retry_on_timeout=True, dead_timeout=2)
+    es = Elasticsearch([{
+        'host': 'search-persi-es-4zjjaw2exoo73nq2xbq3mvulie.us-west-2.es.amazonaws.com', 'port': 443, 'use_ssl': True
+    }])
 
     def open_spider(self, spider):
         self.check_mapping(5000)
