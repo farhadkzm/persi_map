@@ -7,56 +7,72 @@ es = Elasticsearch([{
     'host': 'search-persi-es-4zjjaw2exoo73nq2xbq3mvulie.us-west-2.es.amazonaws.com', 'port': 443, 'use_ssl': True
 }])
 
+
 # search queries to be implemented:
 #
 def search(request):
-    geo_piont = {
-        "lat": float(request.GET.get('lat', 0)),
-        "lon": float(request.GET.get('lng', 0))
+    geo_distance = {
+        "distance": request.GET.get('distance', ''),
+        "location.geo_set": {
+            "lat": float(request.GET.get('lat', 0)),
+            "lon": float(request.GET.get('lng', 0))
+        }
     }
-    distance = request.GET.get('distance', '')
+
     category = request.GET.get('category', '')
     name = request.GET.get('name', '')
     occupation = request.GET.get('occupation', '')
     clinic = request.GET.get('clinic', '')
     gender = request.GET.get('gender', '')
-    matching_blocks = []
+
+    must_blocks = [{
+        "geo_distance": geo_distance
+    }]
+
     if name != '':
-        matching_blocks.append({"match": {"name": name}})
+        must_blocks.append({
+            "wildcard": {
+                "name": "*{}*".format(name)
+            }
+        })
 
     if occupation != '':
-        matching_blocks.append({"match": {"detail.occupation": occupation}})
+        must_blocks.append({
+            "match": {
+                "detail.occupation": occupation
+            }
+        })
 
     if clinic != '':
-        matching_blocks.append({"match": {"location.clinic_name": clinic}})
+        must_blocks.append({
+            "wildcard": {
+                "location.clinic_name": "*{}*".format(clinic)
+            }
+        })
 
-    should_blocks = []
-    minimum_should_match = 0
     if gender != '':
-        should_blocks = [{"term": {"detail.gender": ""}}, {"term": {"detail.gender": gender}}]
-        minimum_should_match = 1
+        must_blocks.append({
+            "match": {
+                "detail.gender": gender
+            }
+        })
 
-    print 'printing matching blocks'
-    print matching_blocks
     search_body = {
         "query": {
             "bool": {
-                "must": matching_blocks,
-                "should": should_blocks,
-                "minimum_should_match": minimum_should_match,
+                "must": must_blocks,
                 "filter": [
                     {
-                        "geo_distance": {
-                            "distance": distance,
-                            "location.geo_set": geo_piont
+                        "term": {
+                            "type": category
                         }
-                    },
-                    {"term": {"type": category}}
+                    }
                 ]
             }
         }
     }
 
+    print "Search request to be sent to ES\n{}".format(search_body)
     result = es.search(index='object', doc_type='item', body=search_body, filter_path=['hits.hits._*'])
     return JsonResponse(result)
 
