@@ -6,10 +6,12 @@
     <meta charset="UTF-8">
 
     <!-- Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 
     <!-- Optional theme -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+          integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
 
     <title>Search the map</title>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
@@ -17,6 +19,10 @@
         #map {
             height: 400px;
             width: 100%;
+        }
+
+        .highlight {
+            background-color: moccasin;
         }
 
         .controls {
@@ -72,7 +78,8 @@
             $scope.category = 'doctor';
             $scope.distance = '100km';
 
-            function setMarkerOntheMap(source) {
+
+            function setMarkerOnMap(source) {
 
                 let infowindow = new google.maps.InfoWindow({
                     content: $interpolate('<b>{{name}}</b><p>{{location.address}}</p>')(source)
@@ -93,6 +100,13 @@
 
                 $scope.markers.push(marker);
             }
+
+
+            $scope.highlightMarker = function (markerIndex) {
+                $scope.markers.forEach(mrk => mrk.setIcon(null));
+                $scope.markers[markerIndex].setIcon('http://maps.google.com/mapfiles/ms/icons/blue-dot.png');
+
+            };
 
             $scope.dragendMap = function () {
                 $scope.searchPoint = {lat: $scope.map.getCenter().lat(), lng: $scope.map.getCenter().lng()};
@@ -138,7 +152,7 @@
                         let result = data.hits.hits;
                         $scope.searchResult = [];
                         result.map(el => el._source).forEach(source => {
-                            setMarkerOntheMap(source);
+                            setMarkerOnMap(source);
                             $scope.searchResult.push(source);
                         });
 
@@ -193,7 +207,11 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr ng-repeat="el in searchResult">
+                <tr ng-repeat="el in searchResult"
+                    ng-mouseover="activateMarker($index)"
+                    ng-mouseleave="deactivateMarker($index)"
+                    ng-click="selectedIndex = $index"
+                    ng-class="selectedIndex==$index?highlight:''">
                     <th scope="row">{{index}}</th>
                     <td>{{ el.name }}</td>
                     <td>{{ el.location.address }}</td>

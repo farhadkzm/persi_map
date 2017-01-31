@@ -58,6 +58,7 @@ def search(request):
         })
 
     search_body = {
+        "size": 100,
         "query": {
             "bool": {
                 "must": must_blocks,
