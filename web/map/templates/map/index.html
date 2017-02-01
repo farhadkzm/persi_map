@@ -21,7 +21,7 @@
             width: 100%;
         }
 
-        .highlight {
+        .highlighted-row {
             background-color: moccasin;
         }
 
@@ -51,6 +51,20 @@
             border-color: #4d90fe;
         }
 
+        .detail-container {
+            flex-direction: column;
+            display: flex;
+        }
+
+        .detail-item-main {
+            font-weight: bold;
+        }
+
+        .detail-item-second {
+            color: dimgrey;
+            font-size: 14px;
+        }
+
         .pac-container {
             font-family: Roboto;
         }
@@ -76,12 +90,15 @@
             $scope.markers = [];
             $scope.searchPoint = {};
             $scope.category = 'doctor';
-            $scope.distance = '100km';
+            $scope.distance = '30km';
 
+            //used for bi-direction highlighting between markers and table rows
+            $scope.selectedIndex = null;
+            $scope.selectedMarker = null;
 
             function setMarkerOnMap(source) {
 
-                let infowindow = new google.maps.InfoWindow({
+                let infoWindow = new google.maps.InfoWindow({
                     content: $interpolate('<b>{{name}}</b><p>{{location.address}}</p>')(source)
                 });
 
@@ -92,19 +109,40 @@
                     map: $scope.map,
                     title: source.name
                 });
-
+                marker.infoWindow = infoWindow;
                 marker.addListener('click', function () {
-                    infowindow.open($scope.map, marker);
-                    //todo highlight the corespondent row item
+                    infoWindow.open($scope.map, marker);
+                    $scope.selectedMarker = marker;
                 });
 
                 $scope.markers.push(marker);
             }
 
+            function clearAll() {
+                if ($scope.selectedMarker != null) {
+                    $scope.selectedMarker.setIcon(null);
+                    $scope.selectedMarker.infoWindow.close();
+                }
+                $scope.selectedMarker = null;
+                angular.element(document.querySelector('#result-table')).children().removeClass('bg-info');
+            }
 
-            $scope.highlightMarker = function (markerIndex) {
+            $scope.selectItem = function (index) {
+                clearAll();
+                $scope.selectedMarker = $scope.markers[index];
+                $scope.selectedMarker.setIcon('http://maps.google.com/mapfiles/ms/icons/blue-dot.png');
+                $scope.selectedMarker.infoWindow.open();
+                angular.element(document.querySelector('#result-table')).children()[index].addClass('bg-info');
+            };
+
+            $scope.activateMarker = function (markerIndex) {
                 $scope.markers.forEach(mrk => mrk.setIcon(null));
                 $scope.markers[markerIndex].setIcon('http://maps.google.com/mapfiles/ms/icons/blue-dot.png');
+
+            };
+
+            $scope.deactivateMarker = function (markerIndex) {
+                $scope.markers[markerIndex].setIcon(null);
 
             };
 
@@ -113,7 +151,11 @@
 
                 $scope.search(false);
             };
+            $scope.selectRow = function (index) {
+                $scope.selectedIndex = index;
+                console.log('selecting index ' + index);
 
+            };
             $scope.changeAddress = function (place) {
                 //infowindow.close();
                 // marker.setVisible(false);
@@ -206,15 +248,31 @@
                     <th>Address</th>
                 </tr>
                 </thead>
-                <tbody>
+                <tbody id="result-table">
                 <tr ng-repeat="el in searchResult"
                     ng-mouseover="activateMarker($index)"
                     ng-mouseleave="deactivateMarker($index)"
-                    ng-click="selectedIndex = $index"
-                    ng-class="selectedIndex==$index?highlight:''">
-                    <th scope="row">{{index}}</th>
-                    <td>{{ el.name }}</td>
-                    <td>{{ el.location.address }}</td>
+
+                    ng-click="selectItem($index)">
+                    <th scope="row">{{$index}}</th>
+                    <td>
+                        <div class="detail-container">
+                            <span class="detail-item-main"><a href="{{el.src}}">{{ el.name }}</a></span>
+                            <span class="detail-item-second">{{ el.detail.occupation }}</span>
+                            <span class="detail-item-second">{{ el.detail.gender }}</span>
+
+                        </div>
+                    </td>
+
+                    <td>
+                        <div class="detail-container">
+                            <span class="detail-item-main">{{ el.location.clinic_name }}</span>
+                            <span class="detail-item-second">{{ el.location.address }}</span>
+                            <span class="detail-item-second">{{ el.location.phone }}</span>
+
+                        </div>
+                    </td>
+
                 </tr>
                 </tbody>
             </table>
