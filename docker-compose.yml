@@ -23,5 +23,5 @@ services:
       - ./web:/code
     ports:
       - "8001:8000"
-    links:
-      - search
+#    links:
+#      - search

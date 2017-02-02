@@ -99,7 +99,7 @@
             function setMarkerOnMap(source) {
 
                 let infoWindow = new google.maps.InfoWindow({
-                    content: $interpolate('<b>{{name}}</b><p>{{location.address}}</p>')(source)
+                    content: $interpolate('<a href="{{src}}"><b>{{ name }}</b></a><p>{{location.address}}</p>')(source)
                 });
 
                 let geoSet = source.location.geo_set;
@@ -132,7 +132,7 @@
                 $scope.selectedMarker = $scope.markers[index];
                 $scope.selectedMarker.setIcon('http://maps.google.com/mapfiles/ms/icons/blue-dot.png');
                 $scope.selectedMarker.infoWindow.open();
-                angular.element(document.querySelector('#result-table')).children()[index].addClass('bg-info');
+                angular.element(document.querySelector('#result-table')).children().eq(index).addClass('bg-info');
             };
 
             $scope.activateMarker = function (markerIndex) {
@@ -232,11 +232,12 @@
     <input id="gender-input" class="controls" type="text" placeholder="Gender" ng-model="gender"/>
 
     <input type="button" value="Search" ng-click="search()"/>
-
-    <div id="map"></div>
-
-
-    <div>
+<div>
+    <div class="col-md-8">  <div id="map"></div></div>
+    <div class="col-md-4" style="
+      height: 600px;
+      overflow: scroll;
+    ">
         <div class="table-responsive">
             <caption>Doctors in the searched area:</caption>
 
@@ -250,11 +251,9 @@
                 </thead>
                 <tbody id="result-table">
                 <tr ng-repeat="el in searchResult"
-                    ng-mouseover="activateMarker($index)"
-                    ng-mouseleave="deactivateMarker($index)"
-
-                    ng-click="selectItem($index)">
-                    <th scope="row">{{$index}}</th>
+                    ng-mouseover="selectItem($index)"
+>
+                    <th scope="row">{{$index + 1}}</th>
                     <td>
                         <div class="detail-container">
                             <span class="detail-item-main"><a href="{{el.src}}">{{ el.name }}</a></span>
@@ -277,9 +276,18 @@
                 </tbody>
             </table>
         </div>
-
-
     </div>
+
+
+
+
+
+
+</div>
+
+
+
+
 
 </div>
 <script>
