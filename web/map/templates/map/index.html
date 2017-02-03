@@ -91,6 +91,7 @@
             $scope.searchPoint = {};
             $scope.category = 'doctor';
             $scope.distance = '30km';
+            $scope.home = undefined;
 
             //used for bi-direction highlighting between markers and table rows
             $scope.selectedIndex = null;
@@ -144,17 +145,29 @@
             };
 
             $scope.changeAddress = function (place) {
-                //infowindow.close();
-                // marker.setVisible(false);
+
                 $scope.searchPoint = {};
                 if (!place.geometry) {
-                    // User entered the name of a Place that was not suggested and
-                    // pressed the Enter key, or the Place Details request failed.
                     window.alert("No details available for input: '" + place.name + "'");
                     return;
                 }
                 let location = place.geometry.location;
                 $scope.searchPoint = {lat: location.lat(), lng: location.lng()};
+                //remove home
+                if ($scope.home){
+                    $scope.home.setMap(null);
+                }
+                //set new home
+                let latlon = new google.maps.LatLng($scope.searchPoint.lat, $scope.searchPoint.lng);
+                $scope.home = new google.maps.Marker({
+                    position: latlon,
+                    map: $scope.map,
+                    icon: {
+                        path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+                        scale: 5
+                    }
+                });
+
                 $scope.map.setCenter(new google.maps.LatLng(location.lat(), location.lng()));
             };
 
@@ -177,7 +190,7 @@
                     //remove all markers
                     $scope.markers.forEach(mkr => mkr.setMap(null));
                     $scope.markers = [];
-                    if (data.hits != undefined && data.hits.hits !== undefined) {
+                    if (data.hits && data.hits.hits) {
                         let result = data.hits.hits;
                         $scope.searchResult = [];
                         result.map(el => el._source).forEach(source => {
