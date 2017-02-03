@@ -110,39 +110,30 @@
                     title: source.name
                 });
                 marker.infoWindow = infoWindow;
+                let markerIndex = $scope.markers.push(marker) - 1;
                 marker.addListener('click', function () {
-                    infoWindow.open($scope.map, marker);
-                    $scope.selectedMarker = marker;
+                    $scope.setActiveMarker(markerIndex);
                 });
 
-                $scope.markers.push(marker);
+
             }
 
-            function clearAll() {
-                if ($scope.selectedMarker != null) {
+            $scope.setActiveMarker = function (index) {
+                let marker = $scope.markers[index];
+                //de-select the old one if exists
+                if ($scope.selectedMarker) {
                     $scope.selectedMarker.setIcon(null);
                     $scope.selectedMarker.infoWindow.close();
                 }
-                $scope.selectedMarker = null;
+                //select the current marker and show the infowindow
+                marker.setIcon('http://maps.google.com/mapfiles/ms/icons/blue-dot.png');
+                marker.infoWindow.open($scope.map, marker);
+                marker.setZIndex(google.maps.Marker.MAX_ZINDEX + 1);
+                $scope.selectedMarker = marker;
+                //clear all rows
                 angular.element(document.querySelector('#result-table')).children().removeClass('bg-info');
-            }
-
-            $scope.selectItem = function (index) {
-                clearAll();
-                $scope.selectedMarker = $scope.markers[index];
-                $scope.selectedMarker.setIcon('http://maps.google.com/mapfiles/ms/icons/blue-dot.png');
-                $scope.selectedMarker.infoWindow.open();
+                //select relevant row
                 angular.element(document.querySelector('#result-table')).children().eq(index).addClass('bg-info');
-            };
-
-            $scope.activateMarker = function (markerIndex) {
-                $scope.markers.forEach(mrk => mrk.setIcon(null));
-                $scope.markers[markerIndex].setIcon('http://maps.google.com/mapfiles/ms/icons/blue-dot.png');
-
-            };
-
-            $scope.deactivateMarker = function (markerIndex) {
-                $scope.markers[markerIndex].setIcon(null);
 
             };
 
@@ -151,11 +142,7 @@
 
                 $scope.search(false);
             };
-            $scope.selectRow = function (index) {
-                $scope.selectedIndex = index;
-                console.log('selecting index ' + index);
 
-            };
             $scope.changeAddress = function (place) {
                 //infowindow.close();
                 // marker.setVisible(false);
@@ -207,7 +194,7 @@
                     }
 
                 }).error(function (data, status, headers, config) {
-                    console.log('failed!')
+                    console.error('failed!')
                 });
             };
         });
@@ -232,61 +219,56 @@
     <input id="gender-input" class="controls" type="text" placeholder="Gender" ng-model="gender"/>
 
     <input type="button" value="Search" ng-click="search()"/>
-<div>
-    <div class="col-md-8">  <div id="map"></div></div>
-    <div class="col-md-4" style="
+    <div>
+        <div class="col-md-8">
+            <div id="map"></div>
+        </div>
+        <div class="col-md-4" style="
       height: 600px;
       overflow: scroll;
     ">
-        <div class="table-responsive">
-            <caption>Doctors in the searched area:</caption>
+            <div class="table-responsive">
+                <caption>Doctors in the searched area:</caption>
 
-            <table class="table table-hover">
-                <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Name</th>
-                    <th>Address</th>
-                </tr>
-                </thead>
-                <tbody id="result-table">
-                <tr ng-repeat="el in searchResult"
-                    ng-mouseover="selectItem($index)"
->
-                    <th scope="row">{{$index + 1}}</th>
-                    <td>
-                        <div class="detail-container">
-                            <span class="detail-item-main"><a href="{{el.src}}">{{ el.name }}</a></span>
-                            <span class="detail-item-second">{{ el.detail.occupation }}</span>
-                            <span class="detail-item-second">{{ el.detail.gender }}</span>
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Address</th>
+                    </tr>
+                    </thead>
+                    <tbody id="result-table">
+                    <tr ng-repeat="el in searchResult"
+                        ng-mouseover="setActiveMarker($index)"
+                    >
+                        <th scope="row">{{$index + 1}}</th>
+                        <td>
+                            <div class="detail-container">
+                                <span class="detail-item-main"><a href="{{el.src}}">{{ el.name }}</a></span>
+                                <span class="detail-item-second">{{ el.detail.occupation }}</span>
+                                <span class="detail-item-second">{{ el.detail.gender }}</span>
 
-                        </div>
-                    </td>
+                            </div>
+                        </td>
 
-                    <td>
-                        <div class="detail-container">
-                            <span class="detail-item-main">{{ el.location.clinic_name }}</span>
-                            <span class="detail-item-second">{{ el.location.address }}</span>
-                            <span class="detail-item-second">{{ el.location.phone }}</span>
+                        <td>
+                            <div class="detail-container">
+                                <span class="detail-item-main">{{ el.location.clinic_name }}</span>
+                                <span class="detail-item-second">{{ el.location.address }}</span>
+                                <span class="detail-item-second">{{ el.location.phone }}</span>
 
-                        </div>
-                    </td>
+                            </div>
+                        </td>
 
-                </tr>
-                </tbody>
-            </table>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
+
+
     </div>
-
-
-
-
-
-
-</div>
-
-
-
 
 
 </div>
