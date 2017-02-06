@@ -2,14 +2,29 @@ from django.http import HttpResponse
 from django.http import JsonResponse
 from django.template import loader
 from elasticsearch import Elasticsearch
+import requests
 
 es = Elasticsearch([{
     'host': 'search-persi-es-4zjjaw2exoo73nq2xbq3mvulie.us-west-2.es.amazonaws.com', 'port': 443, 'use_ssl': True
 }])
 
 
-# search queries to be implemented:
-#
+
+def get_clinic_detail(request):
+    payload = {
+        'key': 'AIzaSyDU0yX6BlIhIF8JLESH9qWu0_GZtAtBtwo',
+        'name': request.GET.get('keyword', ''),
+        'keyword': request.GET.get('keyword', ''),
+        'location': "{},{}".format(request.GET.get('lat', ''), request.GET.get('lon', '')),
+        'radius': '50',
+        'type': 'hospital',
+
+    }
+    r = requests.get('https://maps.googleapis.com/maps/api/place/nearbysearch/json', params=payload)
+
+    return JsonResponse(r.json())
+
+
 def search(request):
     geo_distance = {
         "distance": request.GET.get('distance', ''),

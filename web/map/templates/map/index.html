@@ -100,7 +100,11 @@
             function setMarkerOnMap(source) {
 
                 let infoWindow = new google.maps.InfoWindow({
-                    content: $interpolate('<a href="{{src}}"><b>{{ name }}</b></a><p>{{location.address}}</p>')(source)
+                    content: $interpolate('<a href="{{src}}"><b>{{ name }}</b></a>' +
+                        '<p>{{location.clinic_name}}</p>' +
+                        '<p>{{location.address}}</p>' +
+                        '<p><a target="_blank" href="{{ location.location_url }}">View on Google Maps</a></p>'
+                    )(source)
                 });
 
                 let geoSet = source.location.geo_set;
@@ -154,7 +158,7 @@
                 let location = place.geometry.location;
                 $scope.searchPoint = {lat: location.lat(), lng: location.lng()};
                 //remove home
-                if ($scope.home){
+                if ($scope.home) {
                     $scope.home.setMap(null);
                 }
                 //set new home
@@ -194,6 +198,15 @@
                         let result = data.hits.hits;
                         $scope.searchResult = [];
                         result.map(el => el._source).forEach(source => {
+
+                            //setting google map url for the location
+                            source.location.location_url = (source.location.clinic_name) ?
+                                'https://www.google.com/maps/place/' +
+                                source.location.clinic_name +
+                                '/@' + source.location.geo_set.lat + ',' + source.location.geo_set.lon + '/'
+
+                                : 'http://maps.google.com/maps?q=' + source.location.address;
+
                             setMarkerOnMap(source);
                             $scope.searchResult.push(source);
                         });
@@ -270,6 +283,8 @@
                                 <span class="detail-item-main">{{ el.location.clinic_name }}</span>
                                 <span class="detail-item-second">{{ el.location.address }}</span>
                                 <span class="detail-item-second">{{ el.location.phone }}</span>
+                                <span class="detail-item-second"><a target="_blank"
+                                                                    href="{{ el.location.location_url }}">View on Google Maps</a></span>
 
                             </div>
                         </td>
