@@ -91,6 +91,7 @@
             $scope.searchPoint = {};
             $scope.category = 'doctor';
             $scope.distance = '30km';
+            $scope.home = undefined;
 
             //used for bi-direction highlighting between markers and table rows
             $scope.selectedIndex = null;
@@ -99,7 +100,11 @@
             function setMarkerOnMap(source) {
 
                 let infoWindow = new google.maps.InfoWindow({
-                    content: $interpolate('<a href="{{src}}"><b>{{ name }}</b></a><p>{{location.address}}</p>')(source)
+                    content: $interpolate('<a href="{{src}}"><b>{{ name }}</b></a>' +
+                        '<p>{{location.clinic_name}}</p>' +
+                        '<p>{{location.address}}</p>' +
+                        '<p><a target="_blank" href="{{ location.location_url }}">View on Google Maps</a></p>'
+                    )(source)
                 });
 
                 let geoSet = source.location.geo_set;
@@ -144,17 +149,29 @@
             };
 
             $scope.changeAddress = function (place) {
-                //infowindow.close();
-                // marker.setVisible(false);
+
                 $scope.searchPoint = {};
                 if (!place.geometry) {
-                    // User entered the name of a Place that was not suggested and
-                    // pressed the Enter key, or the Place Details request failed.
                     window.alert("No details available for input: '" + place.name + "'");
                     return;
                 }
                 let location = place.geometry.location;
                 $scope.searchPoint = {lat: location.lat(), lng: location.lng()};
+                //remove home
+                if ($scope.home) {
+                    $scope.home.setMap(null);
+                }
+                //set new home
+                let latlon = new google.maps.LatLng($scope.searchPoint.lat, $scope.searchPoint.lng);
+                $scope.home = new google.maps.Marker({
+                    position: latlon,
+                    map: $scope.map,
+                    icon: {
+                        path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+                        scale: 5
+                    }
+                });
+
                 $scope.map.setCenter(new google.maps.LatLng(location.lat(), location.lng()));
             };
 
@@ -177,10 +194,19 @@
                     //remove all markers
                     $scope.markers.forEach(mkr => mkr.setMap(null));
                     $scope.markers = [];
-                    if (data.hits != undefined && data.hits.hits !== undefined) {
+                    if (data.hits && data.hits.hits) {
                         let result = data.hits.hits;
                         $scope.searchResult = [];
                         result.map(el => el._source).forEach(source => {
+
+                            //setting google map url for the location
+                            source.location.location_url = (source.location.clinic_name) ?
+                                'https://www.google.com/maps/place/' +
+                                source.location.clinic_name +
+                                '/@' + source.location.geo_set.lat + ',' + source.location.geo_set.lon + '/'
+
+                                : 'http://maps.google.com/maps?q=' + source.location.address;
+
                             setMarkerOnMap(source);
                             $scope.searchResult.push(source);
                         });
@@ -259,6 +285,8 @@
                                 <span class="detail-item-main">{{ el.location.clinic_name }}</span>
                                 <span class="detail-item-second">{{ el.location.address }}</span>
                                 <span class="detail-item-second">{{ el.location.phone }}</span>
+                                <span class="detail-item-second"><a target="_blank"
+                                                                    href="{{ el.location.location_url }}">View on Google Maps</a></span>
 
                             </div>
                         </td>
