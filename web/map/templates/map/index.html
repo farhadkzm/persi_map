@@ -204,29 +204,31 @@
 </head>
 <body ng-controller="MapController">
 <div class="container">
-    <input id="pac-input" class="controls" type="text" placeholder="Enter a location"/>
+    <div class="col-md-12">
+    <form>
+        <input id="pac-input" class="controls" type="text" placeholder="Enter a location"/>
 
-    <input id="distance-input" class="controls" type="text" placeholder="Distance" ng-model="distance"/>
+        <input id="distance-input" class="controls" type="text" placeholder="Distance" ng-model="distance"/>
 
-    <input id="category-input" class="controls" type="text" placeholder="Category" ng-model="category"/>
+        <input id="category-input" class="controls" type="text" placeholder="Category" ng-model="category"/>
 
-    <input id="name-input" class="controls" type="text" placeholder="Doctor's name" ng-model="name"/>
+        <input id="name-input" class="controls" type="text" placeholder="Doctor's name" ng-model="name"/>
 
-    <input id="occupation-input" class="controls" type="text" placeholder="Occupation" ng-model="occupation"/>
+        <input id="occupation-input" class="controls" type="text" placeholder="Occupation" ng-model="occupation"/>
 
-    <input id="clinic-input" class="controls" type="text" placeholder="Clinic" ng-model="clinic"/>
+        <input id="clinic-input" class="controls" type="text" placeholder="Clinic" ng-model="clinic"/>
 
-    <input id="gender-input" class="controls" type="text" placeholder="Gender" ng-model="gender"/>
+        <input id="gender-input" class="controls" type="text" placeholder="Gender" ng-model="gender"/>
 
-    <input type="button" value="Search" ng-click="search()"/>
-    <div>
+        <input type="button" value="Search" ng-click="search()"/>
+    </form></div>
+    <div class="col-md-12">
         <div class="col-md-8">
             <div id="map"></div>
         </div>
         <div class="col-md-4" style="
       height: 600px;
-      overflow: scroll;
-    ">
+      overflow: scroll;">
             <div class="table-responsive">
                 <caption>Doctors in the searched area:</caption>
 

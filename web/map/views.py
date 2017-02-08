@@ -77,8 +77,12 @@ def search(request):
     result = es.search(index='object', doc_type='item', body=search_body, filter_path=['hits.hits._*'])
     return JsonResponse(result)
 
-
 def index(request):
     template = loader.get_template('map/index.html')
+
+    return HttpResponse(template.render({}, request))
+
+def new_item(request):
+    template = loader.get_template('map/new_item.html')
 
     return HttpResponse(template.render({}, request))
