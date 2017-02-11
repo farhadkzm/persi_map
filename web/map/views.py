@@ -9,20 +9,9 @@ es = Elasticsearch([{
 }])
 
 
+def create_new_item(request):
 
-def get_clinic_detail(request):
-    payload = {
-        'key': 'AIzaSyDU0yX6BlIhIF8JLESH9qWu0_GZtAtBtwo',
-        'name': request.GET.get('keyword', ''),
-        'keyword': request.GET.get('keyword', ''),
-        'location': "{},{}".format(request.GET.get('lat', ''), request.GET.get('lon', '')),
-        'radius': '50',
-        'type': 'hospital',
-
-    }
-    r = requests.get('https://maps.googleapis.com/maps/api/place/nearbysearch/json', params=payload)
-
-    return JsonResponse(r.json())
+    return JsonResponse('')
 
 
 def search(request):
@@ -92,10 +81,12 @@ def search(request):
     result = es.search(index='object', doc_type='item', body=search_body, filter_path=['hits.hits._*'])
     return JsonResponse(result)
 
+
 def index(request):
     template = loader.get_template('map/index.html')
 
     return HttpResponse(template.render({}, request))
+
 
 def new_item(request):
     template = loader.get_template('map/new_item.html')

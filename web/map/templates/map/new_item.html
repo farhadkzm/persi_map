@@ -16,7 +16,6 @@
     <title>Add a new service</title>
 
 
-
     <script>
 
         let newItemApp = angular.module('newItemApp', []);
@@ -24,7 +23,7 @@
         newItemApp.controller('NewItemController', function NewItemController($scope, $http, $interpolate) {
 
             $scope.createNewItem = function () {
-                   console.log('added');
+                console.log('added');
                 /**
                  * category
                  * address
@@ -38,22 +37,40 @@
             }
         });
 
+        function initAutoComplete() {
+            $scope = angular.element(document.querySelector('[ng-controller="MapController"]')).scope();
+            let input = document.getElementById('pac-input');
+
+            let autocomplete = new google.maps.places.Autocomplete(input);
+            autocomplete.setTypes(['address']);
+
+            autocomplete.addListener('place_changed', function () {
+
+
+                let place = autocomplete.getPlace();
+                $scope.address = place.formatted_address
+
+            });
+        }
 
     </script>
+    <script src='https://www.google.com/recaptcha/api.js'></script>
+
 </head>
 <body ng-controller="NewItemController">
 <div class="container">
 
     <div class="row">
-        <form>
-            <input  class="controls" type="text" />
-            <input  class="controls" type="text"  ng-model="distance"/>
-            <input  class="controls" type="text"  ng-model="category"/>
-            <input  class="controls" type="text"  ng-model="name"/>
-            <input  class="controls" type="text"  ng-model="occupation"/>
-            <input  class="controls" type="text"  ng-model="clinic"/>
-            <input  class="controls" type="text"  ng-model="gender"/>
-            <input  class="controls" type="button"  ng-click="createNewItem()"/>
+        <form class="form-group">
+            <input placeholder="Category" class="form-control" type="category"/>
+            <input placeholder="Name" class="form-control" type="text" ng-model="name"/>
+            <input placeholder="Address" id="pac-input" class="form-control" type="text" ng-model="address"/>
+            <input placeholder="Phone" class="form-control" type="tel" ng-model="phone"/>
+            <input placeholder="Website" class="form-control" type="url" ng-model="link"/>
+            <input placeholder="Email" class="form-control" type="email" ng-model="email"/>
+            <input placeholder="Description" class="form-control" type="text" ng-model="description"/>
+            <div class="g-recaptcha" data-sitekey="6LfiNhUUAAAAAPweRUWVNkrAcnwXpC9E59saBWGR"></div>
+            <button class="btn btn-primary" type="button" ng-click="createNewItem()">Create</button>
 
         </form>
 
@@ -61,7 +78,9 @@
 
 
 </div>
-
+<script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDU0yX6BlIhIF8JLESH9qWu0_GZtAtBtwo&callback=initAutoComplete&libraries=places">
+</script>
 </body>
 </html>
 {% endverbatim %}
