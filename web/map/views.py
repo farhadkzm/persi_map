@@ -87,6 +87,7 @@ def index(request):
 
     return HttpResponse(template.render({}, request))
 
+
 @csrf_protect
 def new_item(request):
     if request.method == 'GET':
@@ -94,7 +95,15 @@ def new_item(request):
         return HttpResponse(template.render({}, request))
 
     if request.method == 'POST':
-        payload = request.POST
-        print payload
-        return HttpResponse()
+        return handle_new_item_post(request)
+
     return index(request)
+
+
+def handle_new_item_post(request):
+    payload = request.POST
+    #check recaptcha
+    #store data in elasticsearch
+    #send email
+    print payload
+    return HttpResponse()
