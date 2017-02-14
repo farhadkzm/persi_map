@@ -2,6 +2,7 @@ from django.http import HttpResponse
 from django.http import JsonResponse
 from django.template import loader
 from elasticsearch import Elasticsearch
+from django.views.decorators.csrf import csrf_protect
 import requests
 
 es = Elasticsearch([{
@@ -10,7 +11,6 @@ es = Elasticsearch([{
 
 
 def create_new_item(request):
-
     return JsonResponse('')
 
 
@@ -87,8 +87,14 @@ def index(request):
 
     return HttpResponse(template.render({}, request))
 
-
+@csrf_protect
 def new_item(request):
-    template = loader.get_template('map/new_item.html')
+    if request.method == 'GET':
+        template = loader.get_template('map/new_item.html')
+        return HttpResponse(template.render({}, request))
 
-    return HttpResponse(template.render({}, request))
+    if request.method == 'POST':
+        payload = request.POST
+        print payload
+        return HttpResponse()
+    return index(request)

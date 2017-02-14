@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-{% verbatim %}
-<html lang="en" ng-app="newItemApp">
+
+<html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
           integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
     <title>Add a new service</title>
 
 
@@ -22,23 +23,43 @@
 
         newItemApp.controller('NewItemController', function NewItemController($scope, $http, $interpolate) {
 
-            $scope.createNewItem = function () {
-                console.log('added');
-                /**
-                 * category
-                 * address
-                 * Name
-                 * Phone
-                 * Link (optional)
-                 * email
-                 * description (optional)
+            $scope.submitted = false;
+            $scope.form = {};
+            $http.defaults.xsrfCookieName = 'csrftoken';
+            $http.defaults.xsrfHeaderName = 'X-CSRFToken';
 
-                 */
+
+            $scope.createNewItem = function () {
+
+                let recaptcha = document.getElementById('g-recaptcha-response').value
+                let address = document.getElementById('addess-hidden').value
+                $http({
+                        url: '/new',
+                        method: 'POST',
+                        data: {
+                            category: $scope.form.category,
+                            name: $scope.form.name,
+                            address: address,
+                            phone: $scope.form.phone,
+                            link: $scope.form.link,
+                            email: $scope.form.email,
+                            description: $scope.form.description,
+                            recaptcha: recaptcha
+                        },
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+                    }
+                ).success(function (data, status, headers, config) {
+                    $scope.submitted = true;
+
+
+                }).error(function (data, status, headers, config) {
+                    console.error('failed!')
+                });
+
             }
         });
 
         function initAutoComplete() {
-            $scope = angular.element(document.querySelector('[ng-controller="MapController"]')).scope();
             let input = document.getElementById('pac-input');
 
             let autocomplete = new google.maps.places.Autocomplete(input);
@@ -46,9 +67,8 @@
 
             autocomplete.addListener('place_changed', function () {
 
-
                 let place = autocomplete.getPlace();
-                $scope.address = place.formatted_address
+                document.getElementById('addess-hidden').value = place.formatted_address
 
             });
         }
@@ -57,18 +77,19 @@
     <script src='https://www.google.com/recaptcha/api.js'></script>
 
 </head>
-<body ng-controller="NewItemController">
-<div class="container">
+<body ng-app="newItemApp" ng-controller="NewItemController">
+<div class="container" ng-if="!submitted">
 
     <div class="row">
         <form class="form-group">
-            <input placeholder="Category" class="form-control" type="category"/>
-            <input placeholder="Name" class="form-control" type="text" ng-model="name"/>
-            <input placeholder="Address" id="pac-input" class="form-control" type="text" ng-model="address"/>
-            <input placeholder="Phone" class="form-control" type="tel" ng-model="phone"/>
-            <input placeholder="Website" class="form-control" type="url" ng-model="link"/>
-            <input placeholder="Email" class="form-control" type="email" ng-model="email"/>
-            <input placeholder="Description" class="form-control" type="text" ng-model="description"/>
+            <input placeholder="Category" class="form-control" ng-model="form.category"/>
+            <input placeholder="Name" class="form-control" ng-model="form.name"/>
+            <input placeholder="Address" id="pac-input" class="form-control"/>
+            <input id="addess-hidden" type="hidden"/>
+            <input placeholder="Phone" class="form-control" ng-model="form.phone"/>
+            <input placeholder="Website" class="form-control" ng-model="form.link"/>
+            <input placeholder="Email" class="form-control" ng-model="form.email"/>
+            <input placeholder="Description" class="form-control" ng-model="form.description"/>
             <div class="g-recaptcha" data-sitekey="6LfiNhUUAAAAAPweRUWVNkrAcnwXpC9E59saBWGR"></div>
             <button class="btn btn-primary" type="button" ng-click="createNewItem()">Create</button>
 
@@ -78,9 +99,13 @@
 
 
 </div>
+<div ng-if="submitted">
+    An activation link has been sent to your email address. Please follow the instructions to
+    show your data on the map.
+    <a href="/">Back to Home</a>
+</div>
 <script async defer
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDU0yX6BlIhIF8JLESH9qWu0_GZtAtBtwo&callback=initAutoComplete&libraries=places">
 </script>
 </body>
 </html>
-{% endverbatim %}
