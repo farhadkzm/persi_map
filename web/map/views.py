@@ -100,6 +100,20 @@ def new_item(request):
     return index(request)
 
 
+def check_recaptcha(payload):
+    recaptcha_request_payload = {'secret': '6LfiNhUUAAAAAO7owWIr66Fo8l_pMFASfhYvxZxF',
+                                 'response': payload.get('recaptcha')}
+    r = requests.post('https://www.google.com/recaptcha/api/siteverify',
+                      data=recaptcha_request_payload)
+    return r.json().get('success')
+
+
+def cleanhtml(raw_html):
+    cleanr = re.compile('<.*?>')
+    cleantext = re.sub(cleanr, '', raw_html)
+    return cleantext
+
+
 def handle_new_item_post(request):
     payload = json.loads(request.body)
 
@@ -107,8 +121,6 @@ def handle_new_item_post(request):
 
     if not recaptcha_success:
         return HttpResponse(status=401)
-
-
 
     data = {
         'type': category,
@@ -134,17 +146,3 @@ def handle_new_item_post(request):
     # send email
     print payload
     return HttpResponse()
-
-
-def check_recaptcha(payload):
-    recaptcha_request_payload = {'secret': '6LfiNhUUAAAAAO7owWIr66Fo8l_pMFASfhYvxZxF',
-                                 'response': payload.get('recaptcha')}
-    r = requests.post('https://www.google.com/recaptcha/api/siteverify',
-                      data=recaptcha_request_payload)
-    return r.json().get('success')
-
-
-def cleanhtml(raw_html):
-    cleanr = re.compile('<.*?>')
-    cleantext = re.sub(cleanr, '', raw_html)
-    return cleantext
