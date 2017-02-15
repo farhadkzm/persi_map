@@ -33,19 +33,11 @@
 
                 let recaptcha = document.getElementById('g-recaptcha-response').value
                 let address = document.getElementById('addess-hidden').value
+                let formData = _.merge({recaptcha, address}, $scope.form);
                 $http({
                         url: '/new',
                         method: 'POST',
-                        data: {
-                            category: $scope.form.category,
-                            name: $scope.form.name,
-                            address: address,
-                            phone: $scope.form.phone,
-                            link: $scope.form.link,
-                            email: $scope.form.email,
-                            description: $scope.form.description,
-                            recaptcha: recaptcha
-                        },
+                        data: formData,
                         headers: {'Content-Type': 'application/x-www-form-urlencoded'}
                     }
                 ).success(function (data, status, headers, config) {
@@ -68,6 +60,7 @@
             autocomplete.addListener('place_changed', function () {
 
                 let place = autocomplete.getPlace();
+                //
                 document.getElementById('addess-hidden').value = place.formatted_address
 
             });
@@ -89,6 +82,8 @@
             <input placeholder="Phone" class="form-control" ng-model="form.phone"/>
             <input placeholder="Website" class="form-control" ng-model="form.link"/>
             <input placeholder="Email" class="form-control" ng-model="form.email"/>
+            <input placeholder="Gender" class="form-control" ng-model="form.gender"/>
+            <input placeholder="Occupation" class="form-control" ng-model="form.occupation"/>
             <input placeholder="Description" class="form-control" ng-model="form.description"/>
             <div class="g-recaptcha" data-sitekey="6LfiNhUUAAAAAPweRUWVNkrAcnwXpC9E59saBWGR"></div>
             <button class="btn btn-primary" type="button" ng-click="createNewItem()">Create</button>

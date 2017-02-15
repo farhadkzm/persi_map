@@ -1,9 +1,11 @@
+import json
+import requests
 from django.http import HttpResponse
 from django.http import JsonResponse
+from django.shortcuts import render
 from django.template import loader
 from elasticsearch import Elasticsearch
-from django.views.decorators.csrf import csrf_protect
-import requests
+import re
 
 es = Elasticsearch([{
     'host': 'search-persi-es-4zjjaw2exoo73nq2xbq3mvulie.us-west-2.es.amazonaws.com', 'port': 443, 'use_ssl': True
@@ -88,11 +90,9 @@ def index(request):
     return HttpResponse(template.render({}, request))
 
 
-@csrf_protect
 def new_item(request):
     if request.method == 'GET':
-        template = loader.get_template('map/new_item.html')
-        return HttpResponse(template.render({}, request))
+        return render(request, "map/new_item.html", {})
 
     if request.method == 'POST':
         return handle_new_item_post(request)
@@ -101,9 +101,50 @@ def new_item(request):
 
 
 def handle_new_item_post(request):
-    payload = request.POST
-    #check recaptcha
-    #store data in elasticsearch
-    #send email
+    payload = json.loads(request.body)
+
+    recaptcha_success = check_recaptcha(payload)
+
+    if not recaptcha_success:
+        return HttpResponse(status=401)
+
+
+
+    data = {
+        'type': category,
+        'src': 'peri_map',
+        'name': name,
+        'detail': {
+
+            'occupation': occ,
+            'gender': gender,
+        },
+
+        'location': {
+            'phone': '',
+            'address': address_line.strip(),
+            'geo_set': {
+                "lat": latitude,
+                "lon": longitude
+            }
+        },
+    }
+    # store data in elasticsearch
+    res = es.index(index='object', doc_type='item', id=1, body=data)
+    # send email
     print payload
     return HttpResponse()
+
+
+def check_recaptcha(payload):
+    recaptcha_request_payload = {'secret': '6LfiNhUUAAAAAO7owWIr66Fo8l_pMFASfhYvxZxF',
+                                 'response': payload.get('recaptcha')}
+    r = requests.post('https://www.google.com/recaptcha/api/siteverify',
+                      data=recaptcha_request_payload)
+    return r.json().get('success')
+
+
+def cleanhtml(raw_html):
+    cleanr = re.compile('<.*?>')
+    cleantext = re.sub(cleanr, '', raw_html)
+    return cleantext
