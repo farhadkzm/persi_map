@@ -1,6 +1,7 @@
 import json
 import re
 import requests
+import smtplib
 from django.http import HttpResponse
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -114,12 +115,36 @@ def cleanhtml(raw_html):
     return cleantext
 
 
+def send_email(payload):
+    sender = 'from@fromdomain.com'
+    receivers = [payload.get('email')]
+    smtp_server = 'localhost'
+    message = """From: From Person <from@fromdomain.com>
+    To: To Person <to@todomain.com>
+    Subject: SMTP e-mail test
+
+    This is a test e-mail message.
+    """
+
+    try:
+        smtpObj = smtplib.SMTP(smtp_server)
+        smtpObj.sendmail(sender, receivers, message)
+        print "Successfully sent email"
+        return False
+    except SMTPException:
+        print "Error: unable to send email"
+        return True
+
+
 def handle_new_item_post(request):
     payload = json.loads(request.body)
 
     recaptcha_success = check_recaptcha(payload)
 
     if not recaptcha_success:
+        return HttpResponse(status=401)
+
+    if not send_email(payload):
         return HttpResponse(status=401)
 
     data = {
@@ -144,6 +169,6 @@ def handle_new_item_post(request):
     }
     # store data in elasticsearch
     res = es.index(index='object', doc_type='item', id=1, body=data)
-    #todo send email
-    print payload
+    # todo check response of the res
+
     return HttpResponse()
