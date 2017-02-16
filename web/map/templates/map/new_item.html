@@ -12,7 +12,7 @@
     <!-- Optional theme -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
           integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
-
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
     <script src='https://www.google.com/recaptcha/api.js'></script>
     <title>Add a new service</title>
 
@@ -32,12 +32,11 @@
             $scope.createNewItem = function () {
 
                 let formData = {
-                    recaptcha: angular.element('#g-recaptcha-response').val(),
-                    address: angular.element('#address-formatted-hidden').val(),
-                    location: {
-                        lat: angular.element('#address-lat-hidden').val(),
-                        lon: angular.element('#address-lon-hidden').val()
-                    }
+                    recaptcha: angular.element(document.querySelector('#g-recaptcha-response')).val(),
+                    address: angular.element(document.querySelector('#address-formatted-hidden')).val(),
+                    lat: angular.element(document.querySelector('#address-lat-hidden')).val(),
+                    lon: angular.element(document.querySelector('#address-lon-hidden')).val()
+
                 };
 
                 formData = _.merge(formData, $scope.form);
@@ -114,7 +113,7 @@
 <script async defer
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDU0yX6BlIhIF8JLESH9qWu0_GZtAtBtwo&callback=initAutoComplete&libraries=places">
 </script>
-<script async defer src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
+
 <script async defer src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
 
 </body>

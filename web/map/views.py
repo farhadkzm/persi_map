@@ -1,11 +1,11 @@
 import json
+import re
 import requests
 from django.http import HttpResponse
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.template import loader
 from elasticsearch import Elasticsearch
-import re
 
 es = Elasticsearch([{
     'host': 'search-persi-es-4zjjaw2exoo73nq2xbq3mvulie.us-west-2.es.amazonaws.com', 'port': 443, 'use_ssl': True
@@ -97,7 +97,7 @@ def new_item(request):
     if request.method == 'POST':
         return handle_new_item_post(request)
 
-    return index(request)
+    return HttpResponse(status=401)
 
 
 def check_recaptcha(payload):
@@ -123,26 +123,27 @@ def handle_new_item_post(request):
         return HttpResponse(status=401)
 
     data = {
-        'type': category,
+        'type': cleanhtml(payload.get('category')),
         'src': 'peri_map',
-        'name': name,
+        'name': cleanhtml(payload.get('name')),
         'detail': {
-
-            'occupation': occ,
-            'gender': gender,
+            'website': cleanhtml(payload.get('link')),
+            'occupation': cleanhtml(payload.get('occupation')),
+            'description': cleanhtml(payload.get('description')),
+            'gender': cleanhtml(payload.get('gender')),
+            'email': cleanhtml(payload.get('email'))
         },
-
         'location': {
-            'phone': '',
-            'address': address_line.strip(),
+            'phone': cleanhtml(payload.get('phone')),
+            'address': cleanhtml(payload.get('address')),
             'geo_set': {
-                "lat": latitude,
-                "lon": longitude
+                "lat": cleanhtml(payload.get('lat')),
+                "lon": cleanhtml(payload.get('lon'))
             }
         },
     }
     # store data in elasticsearch
     res = es.index(index='object', doc_type='item', id=1, body=data)
-    # send email
+    #todo send email
     print payload
     return HttpResponse()
