@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
           integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
     <script src='https://www.google.com/recaptcha/api.js'></script>
     <title>Add a new service</title>
 
@@ -23,19 +24,65 @@
 
         newItemApp.controller('NewItemController', function NewItemController($scope, $http, $interpolate) {
 
-            $scope.submitted = false;
-            $scope.form = {};
-            $http.defaults.xsrfCookieName = 'csrftoken';
-            $http.defaults.xsrfHeaderName = 'X-CSRFToken';
+                $scope.init = function () {
+                      let existing_item = _.get({{item | safe}},'_source', undefined );
+                      let existing_item_id = _.get(existing_item,'_id', undefined );
+
+                    if (existing_item) {
+
+                        document.getElementById('address-formatted-hidden').value = existing_item.location.address;
+                        document.getElementById('pac-input').value = existing_item.location.address;
+                        document.getElementById('address-lat-hidden').value = existing_item.location.geo_set.lat;
+                        document.getElementById('address-lon-hidden').value = existing_item.location.geo_set.lon;
+                        $scope.item = existing_item;
+                        $scope.item_id = existing_item_id;
+                    } else
+                        $scope.item = {};
+
+                    $scope.submitted = false;
+
+                    $http.defaults.xsrfCookieName = 'csrftoken';
+                    $http.defaults.xsrfHeaderName = 'X-CSRFToken';
+                };
+
+            $scope.saveItem = function () {
+                $scope.createItem($scope.item_id);
+            };
+
+            $scope.deleteItem = function () {
+                let formData = {
+                    recaptcha: angular.element(document.querySelector('#g-recaptcha-response')).val(),
+                    id:id
+
+                };
+
+                formData = _.merge(formData, $scope.form);
+                $http({
+                        url: '/delete',
+                        method: 'POST',
+                        data: formData,
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+                    }
+                ).success(function (data) {
+                    $scope.submitted = true;
 
 
-            $scope.createNewItem = function () {
+                }).error(function (data) {
+                    console.error('failed!')
+                });
+
+
+
+            };
+
+            $scope.createItem = function (id) {
 
                 let formData = {
                     recaptcha: angular.element(document.querySelector('#g-recaptcha-response')).val(),
                     address: angular.element(document.querySelector('#address-formatted-hidden')).val(),
                     lat: angular.element(document.querySelector('#address-lat-hidden')).val(),
-                    lon: angular.element(document.querySelector('#address-lon-hidden')).val()
+                    lon: angular.element(document.querySelector('#address-lon-hidden')).val(),
+                    id:id
 
                 };
 
@@ -79,24 +126,26 @@
 
 </head>
 <body ng-app="newItemApp" ng-controller="NewItemController">
-<div class="container" ng-if="!submitted">
+<div class="container" ng-if="!submitted" ng-init="init()">
 
     <div class="row">
         <form class="form-group">
-            <input placeholder="Category" class="form-control" ng-model="form.category"/>
-            <input placeholder="Name" class="form-control" ng-model="form.name"/>
+            <input placeholder="Category" class="form-control" ng-model="item.type"/>
+            <input placeholder="Name" class="form-control" ng-model="item.name"/>
             <input placeholder="Address" id="pac-input" class="form-control"/>
             <input id="address-formatted-hidden" type="hidden"/>
             <input id="address-lat-hidden" type="hidden"/>
             <input id="address-lon-hidden" type="hidden"/>
-            <input placeholder="Phone" class="form-control" ng-model="form.phone"/>
-            <input placeholder="Website" class="form-control" ng-model="form.link"/>
-            <input placeholder="Email" class="form-control" ng-model="form.email"/>
-            <input placeholder="Gender" class="form-control" ng-model="form.gender"/>
-            <input placeholder="Occupation" class="form-control" ng-model="form.occupation"/>
-            <input placeholder="Description" class="form-control" ng-model="form.description"/>
+            <input placeholder="Phone" class="form-control" ng-model="item.location.phone"/>
+            <input placeholder="Website" class="form-control" ng-model="item.detail.website"/>
+            <input placeholder="Email" class="form-control" ng-model="item.detail.email"/>
+            <input placeholder="Gender" class="form-control" ng-model="item.detail.gender"/>
+            <input placeholder="Occupation" class="form-control" ng-model="item.detail.occupation"/>
+            <input placeholder="Description" class="form-control" ng-model="item.detail.description"/>
             <div class="g-recaptcha" data-sitekey="6LfiNhUUAAAAAPweRUWVNkrAcnwXpC9E59saBWGR"></div>
-            <button class="btn btn-primary" type="button" ng-click="createNewItem()">Create</button>
+            <button class="btn btn-primary" type="button" ng-click="createItem()">Create</button>
+            <button class="btn btn-primary" type="button" ng-click="saveItem()">Save</button>
+            <button class="btn btn-primary" type="button" ng-click="deleteItem()">Delete</button>
 
         </form>
 
@@ -114,7 +163,6 @@
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDU0yX6BlIhIF8JLESH9qWu0_GZtAtBtwo&callback=initAutoComplete&libraries=places">
 </script>
 
-<script async defer src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
 
 </body>
 </html>

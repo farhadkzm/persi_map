@@ -1,3 +1,4 @@
+import hashlib
 import json
 import re
 import requests
@@ -11,10 +12,6 @@ from elasticsearch import Elasticsearch
 es = Elasticsearch([{
     'host': 'search-persi-es-4zjjaw2exoo73nq2xbq3mvulie.us-west-2.es.amazonaws.com', 'port': 443, 'use_ssl': True
 }])
-
-
-def create_new_item(request):
-    return JsonResponse('')
 
 
 def search(request):
@@ -93,8 +90,16 @@ def index(request):
 
 def new_item(request):
     if request.method == 'GET':
-        return render(request, "map/new_item.html", {})
+        id = request.GET.get('id', None)
+        if id is None:
+            return render(request, "map/new_item.html", {})
 
+        item = get_item_by_id(id)
+        item_json = None
+        if item is not None:
+            item_json = json.dumps(item)
+
+        return render(request, "map/new_item.html", {'item': item_json})
     if request.method == 'POST':
         return handle_new_item_post(request)
 
@@ -136,6 +141,14 @@ def send_email(payload):
         return True
 
 
+def get_item_by_id(id):
+    return es.get(index='object', doc_type='item', id=id)
+
+
+def item_exists(id):
+    return es.exists(index='object', doc_type='item', id=id)
+
+
 def handle_new_item_post(request):
     payload = json.loads(request.body)
 
@@ -147,6 +160,11 @@ def handle_new_item_post(request):
     if not send_email(payload):
         return HttpResponse(status=401)
 
+    email = cleanhtml(payload.get('email'))
+    id = hashlib.md5(email).hexdigest()
+    if not item_exists(id):
+        return HttpResponse(status=401)
+
     data = {
         'type': cleanhtml(payload.get('category')),
         'src': 'peri_map',
@@ -156,7 +174,7 @@ def handle_new_item_post(request):
             'occupation': cleanhtml(payload.get('occupation')),
             'description': cleanhtml(payload.get('description')),
             'gender': cleanhtml(payload.get('gender')),
-            'email': cleanhtml(payload.get('email'))
+            'email': email
         },
         'location': {
             'phone': cleanhtml(payload.get('phone')),
@@ -168,7 +186,7 @@ def handle_new_item_post(request):
         },
     }
     # store data in elasticsearch
-    res = es.index(index='object', doc_type='item', id=1, body=data)
+    res = es.index(index='object', doc_type='item', id=id, body=data)
     # todo check response of the res
 
     return HttpResponse()
