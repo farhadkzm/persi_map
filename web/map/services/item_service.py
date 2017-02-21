@@ -2,7 +2,6 @@ import hashlib
 from django.http import HttpResponse
 
 from es import es
-from . import recaptcha
 
 salt = '7b4dafa43458d3a6a232afdd184ecb53'
 
@@ -25,30 +24,8 @@ def item_exists(id):
     return es.exists(index='object', doc_type='item', id=id)
 
 
-def check_recaptcha(recaptcha_value):
-    recaptcha_success = recaptcha.check(recaptcha_value)
-
-    if not recaptcha_success:
-        return HttpResponse('invalid Recaptcha.', status=401)
-    return None
-
-
-def check_secret(payload):
-    if not is_valid_secret(payload.get('id'), payload.get('secret')):
-        return HttpResponse('You are not allowed to this operation.', status=401)
-    return None
-
-
-def edit_item(payload):
-    id = payload.get('id')
-    return create_item(payload, id)
-
-
-def delete_item(payload):
-    # check the secret
-    id = payload.get('id')
+def delete_item(id):
     es.delete(index='object', doc_type='item', id=id)
-    return HttpResponse()
 
 
 def create_item(payload, id=None):
@@ -56,7 +33,7 @@ def create_item(payload, id=None):
         id = generate_id(payload)
 
     if not item_exists(id):
-        return HttpResponse('the email address already exists.', status=401)
+        raise ValueError('the email address already exists.')
 
     data = {
         'type': payload.get('category'),
@@ -80,6 +57,3 @@ def create_item(payload, id=None):
     }
     # store data in elasticsearch
     res = es.index(index='object', doc_type='item', id=id, body=data)
-    # todo check response of the res
-
-    return HttpResponse()

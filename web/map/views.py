@@ -1,17 +1,11 @@
-import hashlib
 import json
 import re
-import requests
-import smtplib
 from django.http import HttpResponse
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.template import loader
 
-
-
-
-
+from create_update_item import *
 
 
 def search(request):
@@ -84,8 +78,40 @@ def search(request):
 
 def index(request):
     template = loader.get_template('map/index.html')
-
     return HttpResponse(template.render({}, request))
+
+
+def edit_item(request):
+    id = None
+    secret = None
+
+    if request.method == 'GET':
+        id = request.GET.get('id', None)
+        secret = request.GET.get('secret', None)
+
+    payload = None
+    if request.method == 'POST':
+        payload = json.loads(request.body)
+        id = payload.get('id')
+        secret = payload.get('secret')
+
+    if id is None \
+            or secret is None \
+            or not is_valid_secret(id, secret):
+        return HttpResponse('You are not allowed to edit this item', status=401)
+
+    item = es.get(index='object', doc_type='item', id=id)
+
+    if item is None:
+        return HttpResponse('There is no item by this id', status=401)
+
+    if request.method == 'GET':
+        return render(request, "map/item.html", {'item': json.dumps(item), 'secret': secret})
+
+    if request.method == 'POST':
+        return edit_item(payload)
+
+    return HttpResponse(status=401)
 
 
 def new_item(request):
@@ -101,7 +127,7 @@ def new_item(request):
 
         return render(request, "map/new_item.html", {'item': item_json})
     if request.method == 'POST':
-        return handle_new_item_post(   json.loads(request.body))
+        return handle_new_item_post(json.loads(request.body))
 
     return HttpResponse(status=401)
 
@@ -112,27 +138,5 @@ def cleanhtml(raw_html):
     return cleantext
 
 
-def send_email(payload):
-    sender = 'from@fromdomain.com'
-    receivers = [payload.get('email')]
-    smtp_server = 'localhost'
-    message = """From: From Person <from@fromdomain.com>
-    To: To Person <to@todomain.com>
-    Subject: SMTP e-mail test
-
-    This is a test e-mail message.
-    """
-
-    try:
-        smtpObj = smtplib.SMTP(smtp_server)
-        smtpObj.sendmail(sender, receivers, message)
-        print "Successfully sent email"
-        return False
-    except SMTPException:
-        print "Error: unable to send email"
-        return True
-
-
 def get_item_by_id(id):
-    return es.get(index='object', doc_type='item', id=id)
-
+    return
