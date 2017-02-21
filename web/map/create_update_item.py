@@ -1,40 +1,80 @@
+import hashlib
+from django.http import HttpResponse
+
+from es import es
 from . import recaptcha
-import requests
+
+salt = '7b4dafa43458d3a6a232afdd184ecb53'
 
 
-def handle_new_item_post(request):
-    payload = json.loads(request.body)
+def generate_secret(id):
+    return hashlib.md5(id + salt).hexdigest()
 
-    recaptcha_success = recaptcha.check_recaptcha(payload)
+
+def is_valid_secret(id, secret):
+    return secret == generate_secret(id)
+
+
+def generate_id(payload):
+    email = payload.get('email')
+    address = payload.get('address')
+    return hashlib.md5(email + 'peri_map' + address).hexdigest()
+
+
+def item_exists(id):
+    return es.exists(index='object', doc_type='item', id=id)
+
+
+def check_recaptcha(recaptcha_value):
+    recaptcha_success = recaptcha.check(recaptcha_value)
 
     if not recaptcha_success:
-        return HttpResponse(status=401)
+        return HttpResponse('invalid Recaptcha.', status=401)
+    return None
 
-    if not send_email(payload):
-        return HttpResponse(status=401)
 
-    email = cleanhtml(payload.get('email'))
-    id = hashlib.md5(email).hexdigest()
+def check_secret(payload):
+    if not is_valid_secret(payload.get('id'), payload.get('secret')):
+        return HttpResponse('You are not allowed to this operation.', status=401)
+    return None
+
+
+def edit_item(payload):
+    id = payload.get('id')
+    return create_item(payload, id)
+
+
+def delete_item(payload):
+    # check the secret
+    id = payload.get('id')
+    es.delete(index='object', doc_type='item', id=id)
+    return HttpResponse()
+
+
+def create_item(payload, id=None):
+    if id is None:
+        id = generate_id(payload)
+
     if not item_exists(id):
-        return HttpResponse(status=401)
+        return HttpResponse('the email address already exists.', status=401)
 
     data = {
-        'type': cleanhtml(payload.get('category')),
+        'type': payload.get('category'),
         'src': 'peri_map',
-        'name': cleanhtml(payload.get('name')),
+        'name': payload.get('name'),
         'detail': {
-            'website': cleanhtml(payload.get('link')),
-            'occupation': cleanhtml(payload.get('occupation')),
-            'description': cleanhtml(payload.get('description')),
-            'gender': cleanhtml(payload.get('gender')),
-            'email': email
+            'website': payload.get('link'),
+            'occupation': payload.get('occupation'),
+            'description': payload.get('description'),
+            'gender': payload.get('gender'),
+            'email': payload.get('email')
         },
         'location': {
-            'phone': cleanhtml(payload.get('phone')),
-            'address': cleanhtml(payload.get('address')),
+            'phone': payload.get('phone'),
+            'address': payload.get('address'),
             'geo_set': {
-                "lat": cleanhtml(payload.get('lat')),
-                "lon": cleanhtml(payload.get('lon'))
+                "lat": payload.get('lat'),
+                "lon": payload.get('lon')
             }
         },
     }

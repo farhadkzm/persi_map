@@ -7,11 +7,11 @@ from django.http import HttpResponse
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.template import loader
-from elasticsearch import Elasticsearch
 
 
 
-salt = '7b4dafa43458d3a6a232afdd184ecb53'
+
+
 
 
 def search(request):
@@ -101,7 +101,7 @@ def new_item(request):
 
         return render(request, "map/new_item.html", {'item': item_json})
     if request.method == 'POST':
-        return handle_new_item_post(request)
+        return handle_new_item_post(   json.loads(request.body))
 
     return HttpResponse(status=401)
 
@@ -135,8 +135,4 @@ def send_email(payload):
 
 def get_item_by_id(id):
     return es.get(index='object', doc_type='item', id=id)
-
-
-def item_exists(id):
-    return es.exists(index='object', doc_type='item', id=id)
 
