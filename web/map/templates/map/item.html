@@ -25,8 +25,8 @@
         newItemApp.controller('NewItemController', function NewItemController($scope, $http, $interpolate) {
 
                 $scope.init = function () {
-                      let existing_item = _.get({{item | safe}},'_source', undefined );
-                      let existing_item_id = _.get(existing_item,'_id', undefined );
+                    let existing_item = _.get({{item | safe}},'_source', undefined );
+                    let existing_item_id = _.get(existing_item,'_id', undefined );
 
                     if (existing_item) {
 
@@ -36,6 +36,7 @@
                         document.getElementById('address-lon-hidden').value = existing_item.location.geo_set.lon;
                         $scope.item = existing_item;
                         $scope.item_id = existing_item_id;
+                        $scope.secret = {{ secret|safe }};
                     } else
                         $scope.item = {};
 
@@ -46,26 +47,27 @@
                 };
 
             $scope.saveItem = function () {
-                $scope.createItem($scope.item_id);
+                $scope.createItem($scope.item_id, $scope.secret);
             };
 
             $scope.deleteItem = function () {
                 let formData = {
                     recaptcha: angular.element(document.querySelector('#g-recaptcha-response')).val(),
-                    id:id
-
+                    id:id,
+                    secret:$scope.secret
                 };
 
-                formData = _.merge(formData, $scope.form);
+
                 $http({
-                        url: '/delete',
+                        url: '/api/delete_item',
                         method: 'POST',
                         data: formData,
                         headers: {'Content-Type': 'application/x-www-form-urlencoded'}
                     }
                 ).success(function (data) {
                     $scope.submitted = true;
-
+                    $scope.notification = "Your service has been removed from the map and deleted!";
+$
 
                 }).error(function (data) {
                     console.error('failed!')
@@ -75,26 +77,28 @@
 
             };
 
-            $scope.createItem = function (id) {
+            $scope.createItem = function (id, secret) {
 
                 let formData = {
                     recaptcha: angular.element(document.querySelector('#g-recaptcha-response')).val(),
                     address: angular.element(document.querySelector('#address-formatted-hidden')).val(),
                     lat: angular.element(document.querySelector('#address-lat-hidden')).val(),
                     lon: angular.element(document.querySelector('#address-lon-hidden')).val(),
-                    id:id
+                    id:id,
+                    secret:secret
 
                 };
 
                 formData = _.merge(formData, $scope.form);
                 $http({
-                        url: '/new',
+                        url: '/api/create_item',
                         method: 'POST',
                         data: formData,
                         headers: {'Content-Type': 'application/x-www-form-urlencoded'}
                     }
                 ).success(function (data) {
                     $scope.submitted = true;
+                    $scope.notification = "Your service has been created. You need to activate it using the link that has been emailed to you!";
 
 
                 }).error(function (data) {
@@ -143,9 +147,9 @@
             <input placeholder="Occupation" class="form-control" ng-model="item.detail.occupation"/>
             <input placeholder="Description" class="form-control" ng-model="item.detail.description"/>
             <div class="g-recaptcha" data-sitekey="6LfiNhUUAAAAAPweRUWVNkrAcnwXpC9E59saBWGR"></div>
-            <button class="btn btn-primary" type="button" ng-click="createItem()">Create</button>
-            <button class="btn btn-primary" type="button" ng-click="saveItem()">Save</button>
-            <button class="btn btn-primary" type="button" ng-click="deleteItem()">Delete</button>
+            <button class="btn btn-primary" ng-if="!item_id" type="button" ng-click="createItem()">Create</button>
+            <button class="btn btn-primary" ng-if="item_id" type="button" ng-click="saveItem()">Save</button>
+            <button class="btn btn-primary" ng-if="item_id" type="button" ng-click="deleteItem()">Delete</button>
 
         </form>
 
@@ -154,8 +158,7 @@
 
 </div>
 <div ng-if="submitted">
-    An activation link has been sent to your email address. Please follow the instructions to
-    show your data on the map.
+    {{ notification }}
     <a href="/">Back to Home</a>
 </div>
 

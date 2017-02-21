@@ -4,7 +4,10 @@ from . import views
 
 urlpatterns = [
 
+    url(r'^api/delete_item', views.api_delete_item),
+    url(r'^api/create_item', views.api_create_update_item),
+    url(r'^api/search$', views.api_search),
+    url(r'^service/edit$', views.edit_service),
+    url(r'^service/new$', views.new_service),
     url(r'^$', views.index),
-    url(r'^search$', views.search),
-    url(r'^new$', views.new_item),
 ]

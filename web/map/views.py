@@ -5,10 +5,11 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.template import loader
 
-from create_update_item import *
+from services.item_service import *
+from services.recaptcha import check_recaptcha
 
 
-def search(request):
+def api_search(request):
     geo_distance = {
         "distance": request.GET.get('distance', ''),
         "location.geo_set": {
@@ -81,62 +82,63 @@ def index(request):
     return HttpResponse(template.render({}, request))
 
 
-def edit_item(request):
-    id = None
-    secret = None
+def new_service(request):
+    return render(request, "map/item.html", {})
 
-    if request.method == 'GET':
-        id = request.GET.get('id', None)
-        secret = request.GET.get('secret', None)
 
-    payload = None
-    if request.method == 'POST':
-        payload = json.loads(request.body)
-        id = payload.get('id')
-        secret = payload.get('secret')
+def edit_service(request):
+    if request.method is not 'GET':
+        return HttpResponse("Invalid address", status=404)
 
-    if id is None \
-            or secret is None \
-            or not is_valid_secret(id, secret):
-        return HttpResponse('You are not allowed to edit this item', status=401)
+    id = request.GET.get('id', None)
+    secret = request.GET.get('secret', None)
+
+    if id is None or secret is None or not is_valid_secret(id, secret):
+        return HttpResponse("Invalid id or url is corrupted", status=412)
 
     item = es.get(index='object', doc_type='item', id=id)
-
-    if item is None:
-        return HttpResponse('There is no item by this id', status=401)
-
-    if request.method == 'GET':
-        return render(request, "map/item.html", {'item': json.dumps(item), 'secret': secret})
-
-    if request.method == 'POST':
-        return edit_item(payload)
-
-    return HttpResponse(status=401)
+    return render(request, "map/item.html", {'item': json.dumps(item), 'secret': secret})
 
 
-def new_item(request):
-    if request.method == 'GET':
-        id = request.GET.get('id', None)
-        if id is None:
-            return render(request, "map/new_item.html", {})
+def api_delete_item(request):
+    payload = json.loads(request.body)
+    id = payload.get('id')
+    secret = payload.get('secret')
+    recaptcha = payload.get('recaptcha')
+    if id is None \
+            or secret is None \
+            or not is_valid_secret(id, secret) \
+            or not check_recaptcha(recaptcha):
+        return HttpResponse(status=401)
+    delete_item(id)
+    return HttpResponse()
 
-        item = get_item_by_id(id)
-        item_json = None
-        if item is not None:
-            item_json = json.dumps(item)
 
-        return render(request, "map/new_item.html", {'item': item_json})
-    if request.method == 'POST':
-        return handle_new_item_post(json.loads(request.body))
+def api_create_update_item(request):
+    payload = json.loads(request.body)
+    id = payload.get('id')
+    secret = payload.get('secret')
+    recaptcha = payload.get('recaptcha')
 
-    return HttpResponse(status=401)
+    if not check_recaptcha(recaptcha):
+        return HttpResponse(status=401)
+
+    if id is None:
+        return api_create_item(payload)
+
+    # operaion is UPDATE
+    if secret is None \
+            or not is_valid_secret(id, secret):
+        return HttpResponse(status=401)
+
+    try:
+        create_item(payload, id)
+        return HttpResponse()
+    except ValueError as e:
+        return HttpResponse(e, status=401)
 
 
 def cleanhtml(raw_html):
     cleanr = re.compile('<.*?>')
     cleantext = re.sub(cleanr, '', raw_html)
     return cleantext
-
-
-def get_item_by_id(id):
-    return

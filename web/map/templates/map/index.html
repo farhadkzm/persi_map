@@ -178,7 +178,7 @@
 
             $scope.search = function (manualSearch = true) {
 
-                $http.get('/search', {
+                $http.get('/api/search', {
                     params: {
                         clinic: $scope.clinic,
                         name: $scope.name,

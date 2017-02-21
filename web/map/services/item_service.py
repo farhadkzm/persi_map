@@ -1,6 +1,4 @@
 import hashlib
-from django.http import HttpResponse
-
 from es import es
 
 salt = '7b4dafa43458d3a6a232afdd184ecb53'
@@ -29,11 +27,13 @@ def delete_item(id):
 
 
 def create_item(payload, id=None):
+    if id is not None and not item_exists(id):
+        raise ValueError('There is no item by this id.')
+
     if id is None:
         id = generate_id(payload)
-
-    if not item_exists(id):
-        raise ValueError('the email address already exists.')
+        if item_exists(id):
+            raise ValueError('the combination of email and address already exists.')
 
     data = {
         'type': payload.get('category'),
@@ -56,4 +56,4 @@ def create_item(payload, id=None):
         },
     }
     # store data in elasticsearch
-    res = es.index(index='object', doc_type='item', id=id, body=data)
+    es.index(index='object', doc_type='item', id=id, body=data)
