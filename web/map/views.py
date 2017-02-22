@@ -83,12 +83,13 @@ def index(request):
 
 
 def new_service(request):
-    return render(request, "map/item.html", {})
+    return render(request, "map/item.html", {'item': 'undefined', 'secret': 'undefined'})
 
 
 def edit_service(request):
-    if request.method is not 'GET':
-        return HttpResponse("Invalid address", status=404)
+
+    if request.method != 'GET':
+        return HttpResponse("Invalid dd address", status=404)
 
     id = request.GET.get('id', None)
     secret = request.GET.get('secret', None)
@@ -123,13 +124,10 @@ def api_create_update_item(request):
     if not check_recaptcha(recaptcha):
         return HttpResponse(status=401)
 
-    if id is None:
-        return api_create_item(payload)
-
-    # operaion is UPDATE
-    if secret is None \
-            or not is_valid_secret(id, secret):
-        return HttpResponse(status=401)
+    if id is not None:  # operation is UPDATE
+        if secret is None \
+                or not is_valid_secret(id, secret):
+            return HttpResponse(status=401)
 
     try:
         create_item(payload, id)

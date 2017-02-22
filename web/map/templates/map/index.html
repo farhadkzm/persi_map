@@ -89,7 +89,7 @@
         mapApp.controller('MapController', function MapController($scope, $http, $interpolate) {
             $scope.markers = [];
             $scope.searchPoint = {};
-            $scope.category = 'doctor';
+            $scope.type = 'doctor';
             $scope.distance = '30km';
             $scope.home = undefined;
 
@@ -183,7 +183,7 @@
                         clinic: $scope.clinic,
                         name: $scope.name,
                         occupation: $scope.occupation,
-                        category: $scope.category,
+                        type: $scope.type,
                         distance: $scope.distance,
                         gender: $scope.gender,
                         lat: $scope.searchPoint.lat,
@@ -236,7 +236,7 @@
 
         <input id="distance-input" class="controls" type="text" placeholder="Distance" ng-model="distance"/>
 
-        <input id="category-input" class="controls" type="text" placeholder="Category" ng-model="category"/>
+        <input id="category-input" class="controls" type="text" placeholder="Category" ng-model="type"/>
 
         <input id="name-input" class="controls" type="text" placeholder="Doctor's name" ng-model="name"/>
 

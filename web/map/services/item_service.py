@@ -1,4 +1,5 @@
 import hashlib
+
 from es import es
 
 salt = '7b4dafa43458d3a6a232afdd184ecb53'
@@ -36,11 +37,11 @@ def create_item(payload, id=None):
             raise ValueError('the combination of email and address already exists.')
 
     data = {
-        'type': payload.get('category'),
+        'type': payload.get('type'),
         'src': 'peri_map',
         'name': payload.get('name'),
         'detail': {
-            'website': payload.get('link'),
+            'website': payload.get('website'),
             'occupation': payload.get('occupation'),
             'description': payload.get('description'),
             'gender': payload.get('gender'),
@@ -57,3 +58,4 @@ def create_item(payload, id=None):
     }
     # store data in elasticsearch
     es.index(index='object', doc_type='item', id=id, body=data)
+    print "Link to edit: localhost:8001/service/edit?id={}&secret={}".format(id, generate_secret(id))

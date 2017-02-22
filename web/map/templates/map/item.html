@@ -34,9 +34,13 @@
                         document.getElementById('pac-input').value = existing_item.location.address;
                         document.getElementById('address-lat-hidden').value = existing_item.location.geo_set.lat;
                         document.getElementById('address-lon-hidden').value = existing_item.location.geo_set.lon;
-                        $scope.item = existing_item;
+                        let item = _.merge({},existing_item.location);
+                        item = _.merge(item,existing_item.detail);
+                        item = _.merge(item,existing_item);
+                        $scope.item = item;
+
                         $scope.item_id = existing_item_id;
-                        $scope.secret = {{ secret|safe }};
+                        $scope.secret = '{{ secret|safe }}';
                     } else
                         $scope.item = {};
 
@@ -89,7 +93,7 @@ $
 
                 };
 
-                formData = _.merge(formData, $scope.form);
+                formData = _.merge(formData, $scope.item);
                 $http({
                         url: '/api/create_item',
                         method: 'POST',
@@ -130,6 +134,7 @@ $
 
 </head>
 <body ng-app="newItemApp" ng-controller="NewItemController">
+{% verbatim %}
 <div class="container" ng-if="!submitted" ng-init="init()">
 
     <div class="row">
@@ -140,12 +145,12 @@ $
             <input id="address-formatted-hidden" type="hidden"/>
             <input id="address-lat-hidden" type="hidden"/>
             <input id="address-lon-hidden" type="hidden"/>
-            <input placeholder="Phone" class="form-control" ng-model="item.location.phone"/>
-            <input placeholder="Website" class="form-control" ng-model="item.detail.website"/>
-            <input placeholder="Email" class="form-control" ng-model="item.detail.email"/>
-            <input placeholder="Gender" class="form-control" ng-model="item.detail.gender"/>
-            <input placeholder="Occupation" class="form-control" ng-model="item.detail.occupation"/>
-            <input placeholder="Description" class="form-control" ng-model="item.detail.description"/>
+            <input placeholder="Phone" class="form-control" ng-model="item.phone"/>
+            <input placeholder="Website" class="form-control" ng-model="item.website"/>
+            <input placeholder="Email" class="form-control" ng-model="item.email"/>
+            <input placeholder="Gender" class="form-control" ng-model="item.gender"/>
+            <input placeholder="Occupation" class="form-control" ng-model="item.occupation"/>
+            <input placeholder="Description" class="form-control" ng-model="item.description"/>
             <div class="g-recaptcha" data-sitekey="6LfiNhUUAAAAAPweRUWVNkrAcnwXpC9E59saBWGR"></div>
             <button class="btn btn-primary" ng-if="!item_id" type="button" ng-click="createItem()">Create</button>
             <button class="btn btn-primary" ng-if="item_id" type="button" ng-click="saveItem()">Save</button>
@@ -166,6 +171,6 @@ $
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDU0yX6BlIhIF8JLESH9qWu0_GZtAtBtwo&callback=initAutoComplete&libraries=places">
 </script>
 
-
+{% endverbatim %}
 </body>
 </html>
