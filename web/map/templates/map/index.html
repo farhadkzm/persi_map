@@ -194,9 +194,10 @@
                     //remove all markers
                     $scope.markers.forEach(mkr => mkr.setMap(null));
                     $scope.markers = [];
+                    $scope.searchResult = [];
                     if (data.hits && data.hits.hits) {
                         let result = data.hits.hits;
-                        $scope.searchResult = [];
+
                         result.map(el => el._source).forEach(source => {
 
                             //setting google map url for the location

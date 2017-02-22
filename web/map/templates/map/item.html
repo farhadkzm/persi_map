@@ -24,31 +24,33 @@
 
         newItemApp.controller('NewItemController', function NewItemController($scope, $http, $interpolate) {
 
-                $scope.init = function () {
-                    let existing_item = _.get({{item | safe}},'_source', undefined );
-                    let existing_item_id = _.get(existing_item,'_id', undefined );
+            $scope.init = function () {
+                let existing_item = {{item | safe}};
 
-                    if (existing_item) {
+                if (existing_item) {
+                    let existing_item_id = _.get(existing_item, '_id', undefined);
 
-                        document.getElementById('address-formatted-hidden').value = existing_item.location.address;
-                        document.getElementById('pac-input').value = existing_item.location.address;
-                        document.getElementById('address-lat-hidden').value = existing_item.location.geo_set.lat;
-                        document.getElementById('address-lon-hidden').value = existing_item.location.geo_set.lon;
-                        let item = _.merge({},existing_item.location);
-                        item = _.merge(item,existing_item.detail);
-                        item = _.merge(item,existing_item);
-                        $scope.item = item;
 
-                        $scope.item_id = existing_item_id;
-                        $scope.secret = '{{ secret|safe }}';
-                    } else
-                        $scope.item = {};
+                    existing_item = _.get(existing_item, '_source', undefined);
+                    document.getElementById('address-formatted-hidden').value = existing_item.location.address;
+                    document.getElementById('pac-input').value = existing_item.location.address;
+                    document.getElementById('address-lat-hidden').value = existing_item.location.geo_set.lat;
+                    document.getElementById('address-lon-hidden').value = existing_item.location.geo_set.lon;
+                    let item = _.merge({}, existing_item.location);
+                    item = _.merge(item, existing_item.detail);
+                    item = _.merge(item, existing_item);
+                    $scope.item = item;
 
-                    $scope.submitted = false;
+                    $scope.item_id = existing_item_id;
+                    $scope.secret = '{{ secret|safe }}';
+                } else
+                    $scope.item = {};
 
-                    $http.defaults.xsrfCookieName = 'csrftoken';
-                    $http.defaults.xsrfHeaderName = 'X-CSRFToken';
-                };
+                $scope.submitted = false;
+
+                $http.defaults.xsrfCookieName = 'csrftoken';
+                $http.defaults.xsrfHeaderName = 'X-CSRFToken';
+            };
 
             $scope.saveItem = function () {
                 $scope.createItem($scope.item_id, $scope.secret);
@@ -57,8 +59,8 @@
             $scope.deleteItem = function () {
                 let formData = {
                     recaptcha: angular.element(document.querySelector('#g-recaptcha-response')).val(),
-                    id:id,
-                    secret:$scope.secret
+                    id: $scope.item_id,
+                    secret: $scope.secret
                 };
 
 
@@ -71,12 +73,10 @@
                 ).success(function (data) {
                     $scope.submitted = true;
                     $scope.notification = "Your service has been removed from the map and deleted!";
-$
 
                 }).error(function (data) {
                     console.error('failed!')
                 });
-
 
 
             };
@@ -88,12 +88,12 @@ $
                     address: angular.element(document.querySelector('#address-formatted-hidden')).val(),
                     lat: angular.element(document.querySelector('#address-lat-hidden')).val(),
                     lon: angular.element(document.querySelector('#address-lon-hidden')).val(),
-                    id:id,
-                    secret:secret
+                    id: $scope.item_id,
+                    secret: $scope.secret
 
                 };
 
-                formData = _.merge(formData, $scope.item);
+                formData = _.merge($scope.item, formData);
                 $http({
                         url: '/api/create_item',
                         method: 'POST',

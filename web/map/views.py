@@ -18,7 +18,7 @@ def api_search(request):
         }
     }
 
-    category = request.GET.get('category', '')
+    category = request.GET.get('type', '')
     name = request.GET.get('name', '')
     occupation = request.GET.get('occupation', '')
     clinic = request.GET.get('clinic', '')
