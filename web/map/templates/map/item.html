@@ -25,7 +25,7 @@
         newItemApp.controller('NewItemController', function NewItemController($scope, $http, $interpolate) {
 
             $scope.init = function () {
-                let existing_item = {{item | safe}};
+                let existing_item = {{item | safe }};
 
                 if (existing_item) {
                     let existing_item_id = _.get(existing_item, '_id', undefined);
@@ -53,7 +53,7 @@
             };
 
             $scope.saveItem = function () {
-                $scope.createItem($scope.item_id, $scope.secret);
+                $scope.createItem();
             };
 
             $scope.deleteItem = function () {
@@ -71,17 +71,17 @@
                         headers: {'Content-Type': 'application/x-www-form-urlencoded'}
                     }
                 ).success(function (data) {
-                    $scope.submitted = true;
-                    $scope.notification = "Your service has been removed from the map and deleted!";
+                    $scope.delete_operation =true ;
 
                 }).error(function (data) {
                     console.error('failed!')
+                }).finally(function() {
+                    $scope.submitted = true;
                 });
-
 
             };
 
-            $scope.createItem = function (id, secret) {
+            $scope.createItem = function () {
 
                 let formData = {
                     recaptcha: angular.element(document.querySelector('#g-recaptcha-response')).val(),
@@ -101,12 +101,16 @@
                         headers: {'Content-Type': 'application/x-www-form-urlencoded'}
                     }
                 ).success(function (data) {
-                    $scope.submitted = true;
-                    $scope.notification = "Your service has been created. You need to activate it using the link that has been emailed to you!";
+                    console.log(data);
+                    $scope.create_operation =true ;
 
+
+                    $scope.edit_link = document.location.host + data.link;
 
                 }).error(function (data) {
                     console.error('failed!')
+                }).finally(function() {
+                    $scope.submitted = true;
                 });
 
             }
@@ -163,7 +167,8 @@
 
 </div>
 <div ng-if="submitted">
-    {{ notification }}
+    <span ng-if="delete_operation">Your service has been removed from the map and deleted!</span>
+    <span ng-if="create_operation">Edit link for this service: <a ng-href="http://{{edit_link}}">http://{{edit_link}}</a> following is a unique link for your service, you need to keep somewhere secret!In case of any change in your details, go to that link and edit your service.</span>
     <a href="/">Back to Home</a>
 </div>
 

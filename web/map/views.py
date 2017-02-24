@@ -87,7 +87,6 @@ def new_service(request):
 
 
 def edit_service(request):
-
     if request.method != 'GET':
         return HttpResponse("Invalid dd address", status=404)
 
@@ -130,8 +129,8 @@ def api_create_update_item(request):
             return HttpResponse(status=401)
 
     try:
-        create_item(payload, id)
-        return HttpResponse()
+        id = create_item(payload, id)
+        return JsonResponse({'link': "/service/edit?id={}&secret={}".format(id, generate_secret(id))})
     except ValueError as e:
         return HttpResponse(e, status=401)
 

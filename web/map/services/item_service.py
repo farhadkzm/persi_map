@@ -59,3 +59,34 @@ def create_item(payload, id=None):
     # store data in elasticsearch
     es.index(index='object', doc_type='item', id=id, body=data)
     print "Link to edit: localhost:8001/service/edit?id={}&secret={}".format(id, generate_secret(id))
+    return id
+
+
+def delete_index():
+    es.indices.delete(index='object')
+
+
+def create_index():
+    mapping = {
+        "settings": {
+            "index.number_of_shards": 1,
+            "index.number_of_replicas": 1
+        },
+        "mappings": {
+            "item": {
+                "properties": {
+                    "location": {
+                        "properties": {
+                            "geo_set": {
+                                "type": "geo_point"
+                            }
+
+                        }
+
+                    }
+                }
+            }
+        }
+
+    }
+    es.indices.create(index='object', body=mapping)
