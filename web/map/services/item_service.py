@@ -4,6 +4,15 @@ from es import es
 
 salt = '7b4dafa43458d3a6a232afdd184ecb53'
 
+es_prod_index = 'object'
+es_prod_type = 'item'
+
+es_test_index = 'object_test'
+es_test_type = 'item_test'
+
+es_index = es_test_index
+es_type = es_test_type
+
 
 def generate_secret(id):
     return hashlib.md5(id + salt).hexdigest()
@@ -20,11 +29,11 @@ def generate_id(payload):
 
 
 def item_exists(id):
-    return es.exists(index='object', doc_type='item', id=id)
+    return es.exists(index=es_index, doc_type=es_type, id=id)
 
 
 def delete_item(id):
-    es.delete(index='object', doc_type='item', id=id)
+    es.delete(index=es_index, doc_type=es_type, id=id)
 
 
 def create_item(payload, id=None):
@@ -57,13 +66,13 @@ def create_item(payload, id=None):
         },
     }
     # store data in elasticsearch
-    es.index(index='object', doc_type='item', id=id, body=data)
+    es.index(index=es_index, doc_type=es_type, id=id, body=data)
     print "Link to edit: localhost:8001/service/edit?id={}&secret={}".format(id, generate_secret(id))
     return id
 
 
 def delete_index():
-    es.indices.delete(index='object')
+    es.indices.delete(index=es_index)
 
 
 def create_index():
@@ -83,10 +92,18 @@ def create_index():
 
                         }
 
+                    },
+                    "creation": {
+                        "type": "date",
+                        "format": "yyyy-MM-dd HH:mm:ss"
+                    },
+                    "updated": {
+                        "type": "date",
+                        "format": "yyyy-MM-dd HH:mm:ss"
                     }
                 }
             }
         }
 
     }
-    es.indices.create(index='object', body=mapping)
+    es.indices.create(index=es_index, body=mapping)

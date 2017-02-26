@@ -1,13 +1,10 @@
 import scrapy
 import json
-
+from datetime import datetime
 
 class DetailSpider(scrapy.Spider):
     name = "healthpages.wiki_detail"
     data_path = '/code/doctors/healthpages/healthpages'
-
-    # file_lines = tuple(open('/data/names.csv', 'r'))
-    # lines = set(reduce(list.__add__, map(lambda x: x.strip().replace('-', '').lower().split("/"), file_lines)))
 
     def start_requests(self):
         links = json.load(open("{}/doctors_link.json".format(self.data_path), 'r'))
@@ -36,6 +33,7 @@ class DetailSpider(scrapy.Spider):
         gender = self.extract_gender(response)
         addresses = self.extract_addresses(response)
         for address in addresses:
+            created_date = datetime.utcnow().isoformat('T')+'Z';
             items.append({
                 'type': 'doctor',
                 'src': response.url,
@@ -47,6 +45,8 @@ class DetailSpider(scrapy.Spider):
                 },
 
                 'location': address,
+                'creation': created_date,
+                'updated': created_date,
             })
         return items
 
@@ -87,9 +87,3 @@ class DetailSpider(scrapy.Spider):
             })
 
         return addresses
-
-    def name_givenname(self, name):
-        return name.lower(). \
-            replace('dr', ''). \
-            replace('(gp)', ''). \
-            strip().split(" ")
