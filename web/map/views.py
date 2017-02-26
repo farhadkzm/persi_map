@@ -57,7 +57,7 @@ def api_search(request):
         })
 
     search_body = {
-        "size": 100,
+        # "size": 100,
         "query": {
             "bool": {
                 "must": must_blocks,
@@ -73,7 +73,7 @@ def api_search(request):
     }
 
     print "Search request to be sent to ES\n{}".format(search_body)
-    result = es.search(index='object', doc_type='item', body=search_body, filter_path=['hits.hits._*'])
+    result = search_item(search_body)
     return JsonResponse(result)
 
 
@@ -86,6 +86,26 @@ def new_service(request):
     return render(request, "map/item.html", {'item': 'undefined', 'secret': 'undefined'})
 
 
+def admin_items(request):
+    items = None
+
+    if request.GET.get('date') is None:
+        items = items_by_date(datetime.utcnow())
+    else:
+        date_str = request.GET.get('date')
+        date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+        items = items_by_date(date_obj)
+
+    items_with_secret = []
+    for item in items:
+        items_with_secret.append({
+            "item": items,
+            "id": item.get("id"),
+            "secret": generate_secret(item.get("id")),
+        })
+    return render(request, "map/admin.html", {'items': json.dumps(items_with_secret)})
+
+
 def edit_service(request):
     if request.method != 'GET':
         return HttpResponse("Invalid dd address", status=404)
@@ -96,7 +116,7 @@ def edit_service(request):
     if id is None or secret is None or not is_valid_secret(id, secret):
         return HttpResponse("Invalid id or url is corrupted", status=412)
 
-    item = es.get(index='object', doc_type='item', id=id)
+    item = get_item(id)
     return render(request, "map/item.html", {'item': json.dumps(item), 'secret': secret})
 
 
@@ -109,6 +129,19 @@ def api_delete_item(request):
             or secret is None \
             or not is_valid_secret(id, secret) \
             or not check_recaptcha(recaptcha):
+        return HttpResponse(status=401)
+    delete_item(id)
+    return HttpResponse()
+
+
+def api_admin_delete_item(request):
+    payload = json.loads(request.body)
+    id = payload.get('id')
+    secret = payload.get('secret')
+
+    if id is None \
+            or secret is None \
+            or not is_valid_secret(id, secret):
         return HttpResponse(status=401)
     delete_item(id)
     return HttpResponse()

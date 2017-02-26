@@ -2,6 +2,7 @@ import scrapy
 import json
 from datetime import datetime
 
+
 class DetailSpider(scrapy.Spider):
     name = "healthpages.wiki_detail"
     data_path = '/code/doctors/healthpages/healthpages'
@@ -33,7 +34,7 @@ class DetailSpider(scrapy.Spider):
         gender = self.extract_gender(response)
         addresses = self.extract_addresses(response)
         for address in addresses:
-            created_date = datetime.utcnow().isoformat('T')+'Z';
+            created_date = datetime.utcnow().isoformat('T') + 'Z'
             items.append({
                 'type': 'doctor',
                 'src': response.url,

@@ -1,6 +1,7 @@
 import hashlib
 
 from es import es
+from datetime import datetime
 
 salt = '7b4dafa43458d3a6a232afdd184ecb53'
 
@@ -36,10 +37,42 @@ def delete_item(id):
     es.delete(index=es_index, doc_type=es_type, id=id)
 
 
-def create_item(payload, id=None):
-    if id is not None and not item_exists(id):
-        raise ValueError('There is no item by this id.')
+def search_item(search_body):
+    return es.search(index=es_index, doc_type=es_type, body=search_body, filter_path=['hits.hits._*'])
 
+
+def get_item(id):
+    return es.get(index=es_index, doc_type=es_type, id=id)
+
+
+def items_by_date(date_obj):
+    search_body = {
+        # "size": 100,
+        "query": {
+            "bool": {
+                "filter": [
+                    {
+                        "range": {
+                            "updated": {
+                                "gte": date_obj.isoformat('T') + 'Z',
+
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    }
+    return search_item(search_body)
+
+
+def create_item(payload, id=None):
+    updated_date = datetime.utcnow().isoformat('T') + 'Z'
+    created_date = datetime.utcnow().isoformat('T') + 'Z'
+    if id is not None:
+        if not item_exists(id):
+            raise ValueError('There is no item by this id.')
+        created_date = get_item(id).get('creation')
     if id is None:
         id = generate_id(payload)
         if item_exists(id):
@@ -49,6 +82,8 @@ def create_item(payload, id=None):
         'type': payload.get('type'),
         'src': 'peri_map',
         'name': payload.get('name'),
+        'creation': created_date,
+        'updated': updated_date,
         'detail': {
             'website': payload.get('website'),
             'occupation': payload.get('occupation'),
@@ -65,9 +100,10 @@ def create_item(payload, id=None):
             }
         },
     }
+    print "data to be indexed \n{}".format(data)
     # store data in elasticsearch
     es.index(index=es_index, doc_type=es_type, id=id, body=data)
-    print "Link to edit: localhost:8001/service/edit?id={}&secret={}".format(id, generate_secret(id))
+    # print "Link to edit: localhost:8001/service/edit?id={}&secret={}".format(id, generate_secret(id))
     return id
 
 

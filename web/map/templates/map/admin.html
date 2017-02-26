@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+          integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+
+    <title>Data Maintenance</title>
+
+
+    <script>
+
+        let newItemApp = angular.module('newItemApp', []);
+
+        newItemApp.controller('NewItemController', function NewItemController($scope, $http, $interpolate) {
+
+            $scope.items = {{items | safe }};
+
+            $scope.deleteItem = function (index) {
+                let formData = {
+
+                    id: $scope.items[index]._id,
+                    secret: $scope.items[index].secret
+                };
+
+
+                $http({
+                        url: '/api/admin/delete_item',
+                        method: 'POST',
+                        data: formData,
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+                    }
+                ).success(function (data) {
+                    $scope.items[index].deleted = true;
+
+                }).error(function (data) {
+                    console.error('failed!')
+                })
+
+            };
+
+
+
+        });
+
+
+
+    </script>
+
+</head>
+<body ng-app="newItemApp" ng-controller="NewItemController">
+{% verbatim %}
+
+<div class="col-md-4" style="
+      height: 600px;
+      overflow: scroll;">
+    <div class="table-responsive">
+        <caption>Recently added items:</caption>
+
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Address</th>
+            </tr>
+            </thead>
+            <tbody id="result-table">
+            <tr ng-repeat="el in items"
+
+            >
+                <th scope="row">{{$index + 1}}</th>
+                <td>
+                    <div class="detail-container">
+                        <span class="detail-item-main">{{ el.type }}</span>
+                        <span class="detail-item-main">{{ el.name }}</span>
+                        <span class="detail-item-second">{{ el.detail.website }}</span>
+                        <span class="detail-item-second">{{ el.detail.description }}</span>
+                        <span class="detail-item-second">{{ el.detail.email }}</span>
+                        <span class="detail-item-second">{{ el.detail.occupation }}</span>
+                        <span class="detail-item-second">{{ el.detail.gender }}</span>
+
+                    </div>
+                </td>
+
+                <td>
+                    <div class="detail-container">
+
+                        <span class="detail-item-second">{{ el.location.address }}</span>
+                        <span class="detail-item-second">{{ el.location.phone }}</span>
+                        <input type="button" ng-click="deleteItem($index)" value="Remove"/>
+                    </div>
+                </td>
+
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+{% endverbatim %}
+</body>
+</html>
