@@ -54,7 +54,7 @@ def items_by_date(date_obj):
                     {
                         "range": {
                             "updated": {
-                                "gte": date_obj.isoformat('T') + 'Z',
+                                "gte": date_obj.strftime("%Y-%m-%d %H:%M:%S"),
 
                             }
                         }
@@ -63,12 +63,17 @@ def items_by_date(date_obj):
             }
         }
     }
-    return search_item(search_body)
+    items = search_item(search_body)
+    refined_items = []
+    for item in items.get("hits", {}).get("hits",{}):
+        item["_source"].update({"id": item["_id"], "secret": generate_secret(item["_id"])})
+        refined_items.append(item["_source"])
+    return refined_items
 
 
 def create_item(payload, id=None):
-    updated_date = datetime.utcnow().isoformat('T') + 'Z'
-    created_date = datetime.utcnow().isoformat('T') + 'Z'
+    updated_date = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    created_date = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
     if id is not None:
         if not item_exists(id):
             raise ValueError('There is no item by this id.')
@@ -118,7 +123,7 @@ def create_index():
             "index.number_of_replicas": 1
         },
         "mappings": {
-            "item": {
+            es_type: {
                 "properties": {
                     "location": {
                         "properties": {

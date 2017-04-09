@@ -29,7 +29,7 @@
             $scope.deleteItem = function (index) {
                 let formData = {
 
-                    id: $scope.items[index]._id,
+                    id: $scope.items[index].id,
                     secret: $scope.items[index].secret
                 };
 
@@ -79,6 +79,7 @@
             <tr ng-repeat="el in items"
 
             >
+
                 <th scope="row">{{$index + 1}}</th>
                 <td>
                     <div class="detail-container">
@@ -99,6 +100,7 @@
                         <span class="detail-item-second">{{ el.location.address }}</span>
                         <span class="detail-item-second">{{ el.location.phone }}</span>
                         <input type="button" ng-click="deleteItem($index)" value="Remove"/>
+
                     </div>
                 </td>
 

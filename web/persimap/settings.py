@@ -53,7 +53,7 @@ ROOT_URLCONF = 'persimap.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['./map/templates/map'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

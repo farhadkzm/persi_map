@@ -1,18 +1,7 @@
-<!DOCTYPE html>
-{% verbatim %}
-<html lang="en" ng-app="mapApp">
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta charset="UTF-8">
+{% extends "base.html" %}
 
-    <!-- Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
-          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-
-    <!-- Optional theme -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
-          integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
-
+{% block head %}
+    {% verbatim %}
     <title>Search the map</title>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
     <style>
@@ -34,21 +23,6 @@
             height: 32px;
             outline: none;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-        }
-
-        #pac-input {
-            background-color: #fff;
-            font-family: Roboto;
-            font-size: 15px;
-            font-weight: 300;
-            margin-left: 12px;
-            padding: 0 11px 0 13px;
-            text-overflow: ellipsis;
-            width: 300px;
-        }
-
-        #pac-input:focus {
-            border-color: #4d90fe;
         }
 
         .detail-container {
@@ -79,6 +53,17 @@
             font-family: Roboto;
             font-size: 13px;
             font-weight: 300;
+        }
+
+        .panel-heading a:after {
+            font-family: 'Glyphicons Halflings';
+            content: "\e114";
+            float: right;
+            color: grey;
+        }
+
+        .panel-heading a.collapsed:after {
+            content: "\e080";
         }
     </style>
 
@@ -228,116 +213,57 @@
 
 
     </script>
-</head>
-<body ng-controller="MapController">
-<div class="container">
-    <div class="col-md-12">
-    <form>
-        <input id="pac-input" class="controls" type="text" placeholder="Enter a location"/>
+    {% endverbatim %}
+{% endblock %}
 
-        <input id="distance-input" class="controls" type="text" placeholder="Distance" ng-model="distance"/>
+{% block body %}
+    {% verbatim %}
+    <div class="container-fluid" ng-app="mapApp" ng-controller="MapController">
 
-        <input id="category-input" class="controls" type="text" placeholder="Category" ng-model="type"/>
-
-        <input id="name-input" class="controls" type="text" placeholder="Doctor's name" ng-model="name"/>
-
-        <input id="occupation-input" class="controls" type="text" placeholder="Occupation" ng-model="occupation"/>
-
-        <input id="clinic-input" class="controls" type="text" placeholder="Clinic" ng-model="clinic"/>
-
-        <input id="gender-input" class="controls" type="text" placeholder="Gender" ng-model="gender"/>
-
-        <input type="button" value="Search" ng-click="search()"/>
-    </form></div>
-    <div class="col-md-12">
         <div class="col-md-8">
             <div id="map"></div>
         </div>
-        <div class="col-md-4" style="
-      height: 600px;
-      overflow: scroll;">
-            <div class="table-responsive">
-                <caption>Doctors in the searched area:</caption>
 
-                <table class="table table-hover">
-                    <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Name</th>
-                        <th>Address</th>
-                    </tr>
-                    </thead>
-                    <tbody id="result-table">
-                    <tr ng-repeat="el in searchResult"
-                        ng-mouseover="setActiveMarker($index)"
-                    >
-                        <th scope="row">{{$index + 1}}</th>
-                        <td>
-                            <div class="detail-container">
-                                <span class="detail-item-main"><a href="{{el.src}}">{{ el.name }}</a></span>
-                                <span class="detail-item-second">{{ el.detail.occupation }}</span>
-                                <span class="detail-item-second">{{ el.detail.gender }}</span>
+        <div class="col-md-4">
 
-                            </div>
-                        </td>
 
-                        <td>
-                            <div class="detail-container">
-                                <span class="detail-item-main">{{ el.location.clinic_name }}</span>
-                                <span class="detail-item-second">{{ el.location.address }}</span>
-                                <span class="detail-item-second">{{ el.location.phone }}</span>
-                                <span class="detail-item-second"><a target="_blank"
-                                                                    href="{{ el.location.location_url }}">View on Google Maps</a></span>
 
-                            </div>
-                        </td>
-
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
         </div>
-
-
     </div>
+    <script>
+
+        function initMap() {
+            $scope = angular.element(document.querySelector('[ng-controller="MapController"]')).scope();
+
+            let map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 5,
+                center: new google.maps.LatLng(-37.813852, 144.960995),//Melbourne position
+                mapTypeId: 'terrain'
+            });
+            google.maps.event.addListener(map, 'dragend', function () {
+                // get the center and run the search again
+                $scope.dragendMap();
+
+            });
+            let input = document.getElementById('pac-input');
+
+            let autocomplete = new google.maps.places.Autocomplete(input);
+            autocomplete.setTypes(['address']);
+            autocomplete.bindTo('bounds', map);
+
+            autocomplete.addListener('place_changed', function () {
 
 
-</div>
-<script>
+                let place = autocomplete.getPlace();
+                $scope.changeAddress(place);
 
-    function initMap() {
-        $scope = angular.element(document.querySelector('[ng-controller="MapController"]')).scope();
+            });
 
-        let map = new google.maps.Map(document.getElementById('map'), {
-            zoom: 5,
-            center: new google.maps.LatLng(-37.813852, 144.960995),//Melbourne position
-            mapTypeId: 'terrain'
-        });
-        google.maps.event.addListener(map, 'dragend', function () {
-            // get the center and run the search again
-            $scope.dragendMap();
-
-        });
-        let input = document.getElementById('pac-input');
-
-        let autocomplete = new google.maps.places.Autocomplete(input);
-        autocomplete.setTypes(['address']);
-        autocomplete.bindTo('bounds', map);
-
-        autocomplete.addListener('place_changed', function () {
-
-
-            let place = autocomplete.getPlace();
-            $scope.changeAddress(place);
-
-        });
-
-        $scope.map = map;
-    }
-</script>
-<script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDU0yX6BlIhIF8JLESH9qWu0_GZtAtBtwo&callback=initMap&libraries=places">
-</script>
-</body>
-</html>
-{% endverbatim %}
+            $scope.map = map;
+        }
+    </script>
+    <script async defer
+            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDU0yX6BlIhIF8JLESH9qWu0_GZtAtBtwo&callback=initMap&libraries=places">
+    </script>
+    {% endverbatim %}
+{% endblock %}

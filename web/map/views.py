@@ -96,14 +96,7 @@ def admin_items(request):
         date_obj = datetime.strptime(date_str, "%Y-%m-%d")
         items = items_by_date(date_obj)
 
-    items_with_secret = []
-    for item in items:
-        items_with_secret.append({
-            "item": items,
-            "id": item.get("id"),
-            "secret": generate_secret(item.get("id")),
-        })
-    return render(request, "map/admin.html", {'items': json.dumps(items_with_secret)})
+    return render(request, "map/admin.html", {'items': json.dumps(items)})
 
 
 def edit_service(request):
