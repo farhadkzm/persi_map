@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block head %}
+
+    <title>Search services, businesses, people, etc.</title>
+
+    {% load static from staticfiles %}
+    <script src="{% static 'map/search.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'map/search.css' %}">
+
+
+{% endblock %}
+
+{% block body %}
+    {% verbatim %}
+    <body ng-app="mapApp" ng-cloak ng-controller="MapController as ctrl" layout="column">
+
+
+    <md-toolbar layout="row">
+        <md-button class="menu" hide-gt-sm ng-click="toggleSideBar()"/>
+    </md-toolbar>
+
+    <!-- Wireframe Container #2 -->
+    <div flex layout="row">
+
+        <!-- Wireframe Container #3 -->
+        <md-sidenav md-is-locked-open="$mdMedia('gt-sm')"
+                    md-component-id="left"
+                    ng-click="toggleSideBar()">
+
+            <md-card>
+
+                <md-card-title>
+                    <md-card-title-text>
+                        <span class="md-headline">Find services</span>
+                        <span class="md-subhead">Search for people, businesses, services, etc.</span>
+                    </md-card-title-text>
+                    <md-card-title-media>
+
+
+                    </md-card-title-media>
+                </md-card-title>
+
+                <md-card-actions layout="row" layout-align="end center">
+                    <md-button class="md-raised md-primary">Search</md-button>
+                </md-card-actions>
+            </md-card>
+
+        </md-sidenav>
+
+        <!-- Wireframe Container #4 -->
+        <md-content flex id="content">
+            <md-button class="share" md-no-ink></md-button>
+        </md-content>
+
+    </div>
+
+
+    </body>
+    {% endverbatim %}
+{% endblock %}

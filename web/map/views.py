@@ -78,7 +78,7 @@ def api_search(request):
 
 
 def index(request):
-    template = loader.get_template('map/index.html')
+    template = loader.get_template('map/search.html')
     return HttpResponse(template.render({}, request))
 
 
