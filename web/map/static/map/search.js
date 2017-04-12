@@ -10,7 +10,22 @@ mapApp.controller('MapController', function MapController($scope, $http, $interp
     //used for bi-direction highlighting between markers and table rows
     $scope.selectedIndex = null;
     $scope.selectedMarker = null;
-
+    $scope.kk = ['45'];
+    $scope.searchResult  = [
+        {
+            name: 'Peter Johnson', detail: {occupation: 'dentist', gender: 'female'}
+            , location: {address: '12 St Kilda Rd, St Kilda VIC 3182', phone: '4433214123'}
+        },  {
+            name: 'Peter Johnson', detail: {occupation: 'dentist', gender: 'female'}
+            , location: {address: '23 St Kilda Rd, St Kilda VIC 3182', phone: '4433214123'}
+        },  {
+            name: 'Peter Johnson', detail: {occupation: 'dentist', gender: 'female'}
+            , location: {address: '12 St Kilda', phone: '4433214123'}
+        },  {
+            name: 'Peter Johnson', detail: {occupation: 'dentist', gender: 'female'}
+            , location: {address: '12 St Kilda Rd, St Kilda VIC 3182', phone: '4433214123'}
+        }
+    ];
     function setMarkerOnMap(source) {
 
         let infoWindow = new google.maps.InfoWindow({
@@ -37,7 +52,8 @@ mapApp.controller('MapController', function MapController($scope, $http, $interp
 
     }
 
-    $scope.toggleSideBar = function() {
+
+    $scope.toggleSideBar = function () {
         $mdSidenav('left').toggle();
     };
 
