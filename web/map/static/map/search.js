@@ -1,6 +1,6 @@
-let mapApp = angular.module('mapApp', ['ngMaterial']);
+let mapApp = angular.module('mapApp', ['ngMaterial', 'ngMessages']);
 
-mapApp.controller('MapController', function MapController($scope, $http, $interpolate, $mdSidenav) {
+mapApp.controller('MapController', function MapController($scope, $http, $interpolate, $mdSidenav, $mdDialog) {
     $scope.markers = [];
     $scope.searchPoint = {};
     $scope.type = 'doctor';
@@ -10,22 +10,15 @@ mapApp.controller('MapController', function MapController($scope, $http, $interp
     //used for bi-direction highlighting between markers and table rows
     $scope.selectedIndex = null;
     $scope.selectedMarker = null;
-    $scope.kk = ['45'];
-    $scope.searchResult  = [
-        {
+    $scope.selectedSideTabIndex = 0;
+    $scope.searchResult = [];
+    for (let i = 0; i < 20; i++) {
+        $scope.searchResult.push({
             name: 'Peter Johnson', detail: {occupation: 'dentist', gender: 'female'}
             , location: {address: '12 St Kilda Rd, St Kilda VIC 3182', phone: '4433214123'}
-        },  {
-            name: 'Peter Johnson', detail: {occupation: 'dentist', gender: 'female'}
-            , location: {address: '23 St Kilda Rd, St Kilda VIC 3182', phone: '4433214123'}
-        },  {
-            name: 'Peter Johnson', detail: {occupation: 'dentist', gender: 'female'}
-            , location: {address: '12 St Kilda', phone: '4433214123'}
-        },  {
-            name: 'Peter Johnson', detail: {occupation: 'dentist', gender: 'female'}
-            , location: {address: '12 St Kilda Rd, St Kilda VIC 3182', phone: '4433214123'}
-        }
-    ];
+        })
+    }
+
     function setMarkerOnMap(source) {
 
         let infoWindow = new google.maps.InfoWindow({
@@ -57,6 +50,14 @@ mapApp.controller('MapController', function MapController($scope, $http, $interp
         $mdSidenav('left').toggle();
     };
 
+    $scope.showSearchTab = function () {
+        $scope.selectedSideTabIndex = 0;
+        $scope.toggleSideBar();
+    };
+    $scope.showResultTab = function () {
+        $scope.selectedSideTabIndex = 1;
+        $scope.toggleSideBar();
+    };
     $scope.setActiveMarker = function (index) {
         let marker = $scope.markers[index];
         //de-select the old one if exists
@@ -80,6 +81,21 @@ mapApp.controller('MapController', function MapController($scope, $http, $interp
         $scope.searchPoint = {lat: $scope.map.getCenter().lat(), lng: $scope.map.getCenter().lng()};
 
         $scope.search(false);
+    };
+
+    $scope.showTabDialog = function (ev) {
+        $mdDialog.show({
+            controller: MapController,
+            templateUrl: 'tabDialog.tmpl.html',
+            parent: angular.element(document.body),
+            targetEvent: ev,
+            clickOutsideToClose: true
+        })
+            .then(function (answer) {
+                $scope.status = 'You said the information was "' + answer + '".';
+            }, function () {
+                $scope.status = 'You cancelled the dialog.';
+            });
     };
 
     $scope.changeAddress = function (place) {
